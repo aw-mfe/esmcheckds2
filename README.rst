@@ -71,7 +71,7 @@ Installation
 ------------
 To install esm-check-ds-2, you can download the script or exe from this site or install via PIP.
 
-[Windows EXE Package](https://github.com/andywalden/esm-check-ds-2)
+[Windows EXE Package](https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip)
 
 [Python project and source code](https://github.com/andywalden/esm-check-ds-2)
 
