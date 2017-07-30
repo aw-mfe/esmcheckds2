@@ -1,0 +1,10 @@
+include LICENSE
+include README.rst
+include *.rst *.txt LICENSE tox.ini .travis.yml docs/Makefile
+recursive-include tests *.py
+recursive-include docs *.rst conf.py Makefile make.bat
+prune docs/_build
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+
+
