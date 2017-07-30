@@ -1,4 +1,4 @@
-McAfee SIEM Check Datasources: esm-ds-check-2
+McAfee SIEM Check Datasources: esmdscheck2
 ================================
 
 This script queries a McAfee ESM for inactive data sources.
@@ -31,14 +31,14 @@ Usage
 
 
 ```
-    Usage: esm-check_ds (days|hours|minutes)=x  
+    Usage: esmcheckds2 (days|hours|minutes)=x  
 ```
     
 **Examples:**
    
-        esm-check_ds days=2
-        esm-check_ds hours=6
-        esm-check_ds minutes=60
+        esmcheckds2 days=2
+        esmcheckds2 hours=6
+        esmcheckds2 minutes=60
     
 **Output is csv:**
 ```
@@ -48,7 +48,7 @@ Redirect output to file and import as a spreadsheet.
 
 Output Sample:
 
-    $ python esm-check-ds-2.py
+    $ python esmcheckds2 hours=24
     
     Datasources with no events since: 07/28/2017 13:25:04
     001w7tie,172.22.117.20,Windows Event Log - WMI,Receiver (events),never
@@ -69,7 +69,7 @@ Prerequisites
 
 Installation
 ------------
-To install esm-check-ds-2, you can download the script or exe from this site or install via PIP.
+To install esmcheckds2, you can download the script or exe from this site or install via PIP.
 
 [Windows EXE Package](https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip)
 
