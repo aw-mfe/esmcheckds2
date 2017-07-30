@@ -90,7 +90,7 @@ esmuser=NGCP
 esmpass=SuppaSecret
 ```
 An example mfe-saw.ini is available in the download or at:
-https://raw.githubusercontent.com/andywalden/esmcheckds2/mfe_saw.ini
+https://github.com/andywalden/esmcheckds2/blob/master/mfe_saw.ini
 
 **Windows**
 Go to Start | Run and type %APPDATA% into the box and press enter. This will open your
