@@ -29,7 +29,6 @@ to determine which directory it should be placed for your operating system.
 Usage
 ------------
 
-
 ```
     Usage: esmcheckds2 (days|hours|minutes)=x  
 ```
@@ -77,7 +76,7 @@ To install esmcheckds2, you can download the script or exe from this site or ins
 
 Or install via PIP:
 
-    $ pip install esm-check-ds-2
+    $ pip install esmcheckds2
 
 Configuration
 ------------
@@ -91,7 +90,7 @@ esmuser=NGCP
 esmpass=SuppaSecret
 ```
 An example mfe-saw.ini is available in the download or at:
-https://raw.githubusercontent.com/andywalden/esm-check-ds-2/mfe_saw.ini
+https://raw.githubusercontent.com/andywalden/esmcheckds2/mfe_saw.ini
 
 **Windows**
 Go to Start | Run and type %APPDATA% into the box and press enter. This will open your
