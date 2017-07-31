@@ -13,8 +13,10 @@ def main():
 
     if len(sys.argv) > 1:
         args = dict(arg.split('=') for arg in sys.argv[1].split(', '))
-        args = {tunit: int(time) for tunit, time in args.items()}
-        print(args)
+        try:
+            args = {tunit: int(time) for tunit, time in args.items()}
+        except ValueError:
+            _print_help_and_exit()
         td = timedelta(**args)
         time_filter = datetime.now() - td
         format = '%m/%d/%Y %H:%M:%S'
