@@ -496,9 +496,12 @@ class ESM(object):
         Returns:
             Requests Response object
         """
-        return requests.post(url, data=data, headers=headers,
+        try:
+            requests.post(url, data=data, headers=headers,
                              verify=verify)
-                             
+        except requests.exceptions.ConnectionError:
+            print("Unable to connect to ESM: {}".format(url))
+            sys.exit(1)
     @staticmethod
     def _format_params(cmd, **params):
         """
