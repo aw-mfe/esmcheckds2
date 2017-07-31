@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import sys
-#import esmdscheck2
 from configparser import ConfigParser, NoSectionError, MissingSectionHeaderError
 from datetime import datetime, timedelta
-
 from esmcheckds2.esmcheckds2 import Config, ESM, dehexify, _print_help_and_exit
 
 def main():
@@ -16,6 +14,7 @@ def main():
     if len(sys.argv) > 1:
         args = dict(arg.split('=') for arg in sys.argv[1].split(', '))
         args = {tunit: int(time) for tunit, time in args.items()}
+        print(args)
         td = timedelta(**args)
         time_filter = datetime.now() - td
         format = '%m/%d/%Y %H:%M:%S'

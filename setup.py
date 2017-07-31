@@ -2,7 +2,10 @@
 
 import os
 import sys
-from cx_Freeze import setup, Executable
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
         
 with open('README.rst') as readme_file:
     readme = readme_file.read()
