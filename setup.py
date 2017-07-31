@@ -12,19 +12,7 @@ with open('README.rst') as readme_file:
 
 #test_requirements = ['pytest', 'tox']
 requirements = ['requests']
-    
-
-# buildOptions = dict(
-    # packages = [ 'requests', 'esmcheckds2' ],
-    # excludes = [])
-
-# executables = [
-    # Executable(
-        # 'esmcheckds2/console.py',
-        # targetName = 'esmcheckds2.exe',
-    # )
-# ]
-    
+        
 setup(
     name='esmcheckds2',
     version='0.0.1',
@@ -51,6 +39,3 @@ setup(
     #test_suite='tests',
     #tests_require=test_requirements,
     python_requires='>=3')
-    # options = {"build_exe": buildOptions},
-    # executables = executables)
-
