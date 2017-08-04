@@ -86,13 +86,15 @@ Installation
 ------------
 
 ^^^^^^^
-Windows
+Windows:
 ^^^^^^^
+Download, unzip and run at a CMD prompt.
 
 `Windows EXE Package <https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip>`__
 
+
 ^^^^^^^^^
-Linux/MAC
+Linux/MAC:
 ^^^^^^^^^
 
 Install via PIP:
