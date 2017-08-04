@@ -85,22 +85,29 @@ Prerequisites
 Installation
 ------------
 
-To install esmcheckds2, you can download the script or exe from this
-site or install via PIP.
+^^^^^^^
+Windows
+^^^^^^^
 
-`Windows EXE
-Package <https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip>`__
+`Windows EXE Package <https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip>`__
 
+^^^^^^^^^
+Linux/MAC
+^^^^^^^^^
 
-Linux install via PIP:
+Install via PIP:
 
 ::
 
-    $ pip install esmcheckds2
+    $ pip3 install esmcheckds2
+
+
+^^^^^^^
+Manual install 
+^^^^^^^
     
     
-`Python project and source
-code <https://github.com/andywalden/esmcheckds2/archive/master.zip>`__
+`Python project and source code <https://github.com/andywalden/esmcheckds2/archive/master.zip>`__
 
 ::
 
