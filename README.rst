@@ -91,15 +91,39 @@ site or install via PIP.
 `Windows EXE
 Package <https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip>`__
 
-`Python project and source
-code <https://github.com/andywalden/esmcheckds2/archive/master.zip>`__
 
-Or install via PIP:
+Linux install via PIP:
 
 ::
 
     $ pip install esmcheckds2
+    
+    
+`Python project and source
+code <https://github.com/andywalden/esmcheckds2/archive/master.zip>`__
 
+::
+
+    $ unzip master.zip
+    $ cd esmcheckds2
+    $ python3 setup.py install
+    $ esmcheckds2
+    
+    ESM-Check_DS: List inactive datasources on a McAfee ESM
+     Usage: esm-check_ds (days|hours|minutes)=x
+     Provides a list of datasources with no events since the given time unit.
+
+     Examples:
+         esm-check_ds days=2
+         esm-check_ds hours=6
+         esm-check_ds minutes=60
+
+     Output is csv:
+     name,ip,model,rec_name,last_time
+
+     Redirect output to file and import as a spreadsheet.
+
+    
 -------------
 Configuration
 -------------
