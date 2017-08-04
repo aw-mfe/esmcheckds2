@@ -1,3 +1,4 @@
+==========================================
 McAfee SIEM Check Datasources: esmdscheck2
 ==========================================
 
@@ -30,6 +31,7 @@ The script requires a mfe\_saw.ini file for the credentials. See
 installation notes to determine which directory it should be placed for
 your operating system.
 
+-----
 Usage
 -----
 
@@ -115,13 +117,17 @@ It looks like this:
 An example mfe-saw.ini is available in the download or at:
 https://github.com/andywalden/esmcheckds2/blob/master/mfe\_saw.ini
 
-**Windows** 
+^^^^^^^
+Windows
+^^^^^^^
 
 Go to Start \| Run and type %APPDATA% into the box and press
 enter. This will open your Windows home directory. Edit the Copy the
 customized .mfe\_saw.ini (period in front) to the directory.
 
-**Linux \*nix**
+^^^^^^^^^^
+Linux\*nix
+^^^^^^^^^^
 
 The '.mfe\_saw.ini' file will either live in: $HOME or:
 $XDG\_CONFIG\_HOME. You can determine which by typing:
