@@ -7,11 +7,11 @@ try:
 except ImportError:
     from distutils.core import setup
         
-with open('README.md') as readme_file:
+with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 #test_requirements = ['pytest', 'tox']
-requirements = ['requests']
+requirements = ['requests', 'click']
         
 setup(
     name='esmcheckds2',

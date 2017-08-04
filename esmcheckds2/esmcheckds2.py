@@ -19,9 +19,9 @@ class Config(object):
     """
     Find the config settings which include:
     
-     - esm_host
-     - esm_user
-     - esm_passwd    
+     - esmhost
+     - esmuser
+     - esmpass    
     """
     CONFIG = None
 
@@ -38,7 +38,7 @@ class Config(object):
         elif 'XDG_CONFIG_HOME' in os.environ:  
             conf_path = os.environ['XDG_CONFIG_HOME']
         elif 'HOME' in os.environ:  
-            conf_path = os.path.join(os.environ['HOME'], '.config')
+            conf_path = os.path.join(os.environ['HOME'])
         else:
             conf_path = None
 
