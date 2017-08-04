@@ -94,7 +94,7 @@ Download, unzip and run at a CMD prompt.
 
 
 ^^^^^^^^^
-Linux/MAC:
+Linux:
 ^^^^^^^^^
 
 Install via PIP:
