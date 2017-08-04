@@ -322,6 +322,9 @@ class ESM(object):
         for self._row in self._clients_csv:
             if len(self._row) < 2:
                 continue
+            if len(self._row) != 13:
+                print("This client datasource is unknown. Please send to AW.")
+                print(self._row)
 
             self._ds_fields = {'desc_id': "256",
                               'name': self._row[1],
