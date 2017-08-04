@@ -56,7 +56,7 @@ Usage
 
 Redirect output to file and import as a spreadsheet.
 
-Output Sample:
+**Output Sample:**
 
 ::
 
@@ -71,6 +71,7 @@ Output Sample:
     esx003,172.22.119.37,VMware,Receiver (events),12/08/2015 19:22:28
     esx004,172.22.119.38,VMware,Receiver (events),12/08/2015 19:22:28
 
+-------------
 Prerequisites
 -------------
 
@@ -80,6 +81,7 @@ Prerequisites
 -  Port 443 access to the ESM
 -  NGCP credentials
 
+------------
 Installation
 ------------
 
@@ -98,6 +100,7 @@ Or install via PIP:
 
     $ pip install esmcheckds2
 
+-------------
 Configuration
 -------------
 
@@ -141,6 +144,7 @@ $XDG\_CONFIG\_HOME. You can determine which by typing:
 One or both should list your home directory. If both options are
 available, $XDG\_CONFIG\_HOME is the more modern and recommended choice.
 
+----------
 Disclaimer
 ----------
 
