@@ -6,8 +6,9 @@ This script queries a McAfee ESM for inactive data sources.
 
 **Updates from esm-check-ds v1:**
 
--  Hundeds of times faster - completely rewritten to perform mininum
-   number of queries instead of querying for every datasource.
+-  Hundeds of times faster!
+
+-  Completely rewritten to perform limited queries regardless of the number of datasources.
 
 -  McAfee ESM 9.x and 10.x versions are now supported in a single
    script.
