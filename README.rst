@@ -90,7 +90,7 @@ Windows:
 ^^^^^^^
 Download, unzip and run at a CMD prompt.
 
-`Windows EXE Package <https://github.com/andywalden/esmcheckds2/files/1185928/esmdscheck2.zip>`__
+`Windows EXE Package <https://github.com/andywalden/esmcheckds2/releases/latest>`__
 
 
 ^^^^^^^^^
@@ -109,7 +109,7 @@ Manual install
 ^^^^^^^
     
     
-`Python project and source code <https://github.com/andywalden/esmcheckds2/archive/master.zip>`__
+`Python project and source code <https://github.com/andywalden/esmcheckds2/releases/latest>`__
 
 ::
 
