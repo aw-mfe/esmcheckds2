@@ -2,29 +2,20 @@
 
 import os
 import sys
-from cx_Freeze import setup, Executable
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
         
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 #test_requirements = ['pytest', 'tox']
-requirements = ['requests']
-    
-
-# buildOptions = dict(
-    # packages = [ 'requests', 'esmcheckds2' ],
-    # excludes = [])
-
-# executables = [
-    # Executable(
-        # 'esmcheckds2/console.py',
-        # targetName = 'esmcheckds2.exe',
-    # )
-# ]
-    
+requirements = ['requests', 'click']
+        
 setup(
     name='esmcheckds2',
-    version='0.0.1',
+    version='0.0.2.',
     description="Queries McAfee ESM v9.x or v10.x for inactive data sources.",
     author="Andy Walden",
     author_email='aw@krakencodes.com',
@@ -48,6 +39,3 @@ setup(
     #test_suite='tests',
     #tests_require=test_requirements,
     python_requires='>=3')
-    # options = {"build_exe": buildOptions},
-    # executables = executables)
-
