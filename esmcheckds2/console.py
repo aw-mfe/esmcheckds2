@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import click
 import sys
 from configparser import ConfigParser, NoSectionError, MissingSectionHeaderError
 from datetime import datetime, timedelta
