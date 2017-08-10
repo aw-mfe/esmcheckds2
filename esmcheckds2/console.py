@@ -31,7 +31,8 @@ def main():
             _print_help_and_exit()
         td = timedelta(**args)
         time_filter = datetime.now() - td
-        format = '%m/%d/%Y %H:%M:%S'
+        format1 = '%m/%d/%Y %H:%M:%S'
+        format2 = '%Y/%m/%d %H:%M:%S'
     else:
         _print_help_and_exit()
    
@@ -57,14 +58,26 @@ def main():
                 continue
                 
         if ds['desc_id'] == '3' and ds.get('last_time'):
-            if datetime.strptime(ds['last_time'], format) < time_filter:
+            # In some versions the time format is YYYY/MM/DD instead of
+            # DD/MM/YYYY. This detects and normalizes to the latter.
+            try: 
+                last_time = datetime.strptime(ds['last_time'], format1)
+            except ValueError:
+                try:
+                    last_time = datetime.strptime(ds['last_time'], format2)
+                    ds['last_time'] = last_time.strftime(format1)
+                except ValueError:
+                    print("Datasource does not appear to have valid time: {}"
+                            .format(last_time))
+                       
+            if last_time < time_filter:
                 print(','.join(fields))
                 continue
             else:
                 #print('Datasource time inside provided time:', 
                 #    ds['name'], ds['last_time'])
                 continue
-        
+            
 if __name__ == "__main__":
     try:
         main()

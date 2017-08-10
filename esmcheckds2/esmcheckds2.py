@@ -130,10 +130,15 @@ class ESM(object):
         self._data = self._v10_params
         self._resp = self.post(self._method, data=self._data,
                                headers=self._headers, raw=True)
-
+        
         if self._resp.status_code == 401:
             print('Invalid username or password for the ESM')
             sys.exit(1)
+        elif 402 <= self._resp.status_code <= 600:
+            print('ESM Login Error:', self._resp.text)
+            sys.exit(1)
+
+            
         self._data = ''
         self._headers = {'Content-Type': 'application/json'}
         self._headers['Cookie'] = self._resp.headers.get('Set-Cookie')
@@ -391,7 +396,9 @@ class ESM(object):
         else:
             self._data = {}
            
-        self._resp = self.post(self._method, data=self._data, headers=self._headers)
+        self._resp = self.post(self._method, 
+                               data=self._data, 
+                               headers=self._headers)
         return self._resp
 
     def _format_times(self, last_times):
@@ -463,17 +470,15 @@ class ESM(object):
         else:
             self._url = self._base_url + self._method
             if self._data:
-                try:
-                    self._data = json.dumps(self._data)
-                except json.JSONDecodeError:
-                    raise TypeError('Invalid parameter format')
-
+                self._data = json.dumps(self._data)
+                
         self._resp = self._post(self._url, data=self._data,
                                 headers=self._headers, verify=self._verify)
 
         if self._raw:
             return self._resp
 
+        
         if 200 <= self._resp.status_code <= 300:
             try:
                 self._resp = self._resp.json()
