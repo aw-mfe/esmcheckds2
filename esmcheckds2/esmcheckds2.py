@@ -131,7 +131,7 @@ class ESM(object):
         self._resp = self.post(self._method, data=self._data,
                                headers=self._headers, raw=True)
         
-        if self._resp.status_code == 401:
+        if self._resp.status_code in [400, 401]:
             print('Invalid username or password for the ESM')
             sys.exit(1)
         elif 402 <= self._resp.status_code <= 600:
