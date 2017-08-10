@@ -390,7 +390,7 @@ class ESM(object):
             self._data = self._session
         else:
             self._data = {}
-
+           
         self._resp = self.post(self._method, data=self._data, headers=self._headers)
         return self._resp
 
@@ -405,7 +405,13 @@ class ESM(object):
             list of dicts - [{'name', 'model', 'last_time'}]
         """
         self._last_times = last_times
-        self._last_times = self._last_times['ITEMS']
+        try:
+            self._last_times = self._last_times['ITEMS']
+        except KeyError:
+            print('ESM returned an error while getting event times.')
+            print('Does this account have permissions to see the ', end='')
+            print('"View Reports" button under System Properties in the ESM?')
+            sys.exit(1)
         self._last_times_io = StringIO(self._last_times)
         self._last_times_csv = csv.reader(self._last_times_io, delimiter=',')
         self._last_times = []
