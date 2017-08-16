@@ -3,6 +3,7 @@
 import base64
 import csv
 import json
+import logging
 import os
 import re
 import requests
@@ -90,8 +91,8 @@ class Config(object):
         # any envs overwrite the ini values
         if self._envs:
             self._envs = {self._key.lower(): self._val
-                          for self._key, self._val in self._envs.items()}
-            self.__dict__.update(self._envs)
+                            for self._key, self._val in self._envs.items()}
+        self.__dict__.update(self._envs)
 
 
 class ESM(object):
@@ -283,6 +284,7 @@ class ESM(object):
         Returns:
             List of strings representing unparsed client datasources
         """
+        logging.debug('Getting clients for: {}'.format(ds_id))
         self._ds_id = ds_id
         self._method = 'DS_GETDSCLIENTLIST'
         self._data = {'DSID': self._ds_id,
