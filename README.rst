@@ -23,10 +23,13 @@ This script queries a McAfee ESM for inactive data sources.
 -  Settings stored in ini file in secure directory.
 
 If you do not want to run the Windows EXE then you will need to make sure Python 3 is installed.
+
 Directions on how to install and create an environment to run the script on both Linux and Windows are available at:
 https://community.mcafee.com/people/andy777/blog/2016/11/29/installing-python-3
 
-The script requires a .mfe\_saw.ini file for the credentials. See installation notes to determine which directory it should be placed for your operating system.
+The script requires a .mfe\_saw.ini file for the credentials. 
+
+See installation notes to determine which directory it should be placed for your operating system.
 
 -----
 Usage
@@ -41,11 +44,13 @@ Usage
       -d, --days <num>     Days since datasource active
       -h, --hours <num>    Hours since datasource active
       -m, --minutes <num>  Minutes since datasource active
-        
+
+*Note: Zero (0) can be supplied for any of the options to show all devices.*
+      
 **Additional Options:**
 
       -f, --format         Results format: csv, text, word (default: ascii)
-      -w, --write [file]   Output to file (default: ds_results.txt)
+      -w, --write <file>   Output to file (default: ds_results.txt)
       -v, --version        Print version
       --disabled           Include disabled datasources (default: excluded)
       --epo                Include EPO devices (default: excluded)
@@ -56,7 +61,7 @@ Usage
 Examples:
 ---------
 
-Note: All time frames are automatically converted to GMT which is how the ESM stores time.
+*Note: All time frames are automatically converted to GMT which is how the ESM stores time.*
 
 Show all non-disabled datasources that have not sent an event in the past hour:
 ::
