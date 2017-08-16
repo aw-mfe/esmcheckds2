@@ -11,11 +11,11 @@ with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 #test_requirements = ['pytest', 'tox']
-requirements = ['requests', 'click']
+requirements = ['requests', 'prettytable']
         
 setup(
     name='esmcheckds2',
-    version='0.0.2.',
+    version='0.0.3',
     description="Queries McAfee ESM v9.x or v10.x for inactive data sources.",
     author="Andy Walden",
     author_email='aw@krakencodes.com',
@@ -28,10 +28,13 @@ setup(
     license="ISC",
     keywords='esmcheckds2',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ISC License (ISCL)',
         'Natural Language :: English',
+        'Operating System :: MacOS',
+        'Operating System :: Unix',
+        'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

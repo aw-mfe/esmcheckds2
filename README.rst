@@ -6,31 +6,30 @@ This script queries a McAfee ESM for inactive data sources.
 
 **Updates from esm-check-ds v1:**
 
--  Hundeds of times faster!
+-  New Name!
 
--  Completely rewritten to perform limited queries regardless of the number of datasources.
+-  Order of magnitude faster!
 
--  McAfee ESM 9.x and 10.x versions are now supported in a single
-   script.
+-  Completely rewritten to perform a set of limited queries regardless of the number of datasources.
 
--  Additional information provided for each datasource (IP, Receiver
-   name)
+-  McAfee ESM 9.x and 10.x versions are now supported in a single script.
 
--  Output changed to CSV for easy manipulation.
+-  Additional information provided for each datasource (IP, parent device name).
 
--  Compiled into an executable for easy use on Windows.
+-  Native Windows support with the script compiled into a single portable exe.
 
--  Centralized ini file to home directory instead of script directory
-   for increased security.
+-  Output formats include CSV, MS Word, text and bordered.
 
-This is written in Python 3; directions on how to create a virtual
-environment to run the script on both Linux and Windows are available
-at:
+-  Settings stored in ini file in secure directory.
+
+If you do not want to run the Windows EXE then you will need to make sure Python 3 is installed.
+
+Directions on how to install and create an environment to run the script on both Linux and Windows are available at:
 https://community.mcafee.com/people/andy777/blog/2016/11/29/installing-python-3
 
-The script requires a mfe\_saw.ini file for the credentials. See
-installation notes to determine which directory it should be placed for
-your operating system.
+The script requires a .mfe\_saw.ini file for the credentials. 
+
+See installation notes to determine which directory it should be placed for your operating system.
 
 -----
 Usage
@@ -38,29 +37,81 @@ Usage
 
 ::
 
-        Usage: esmcheckds2 (days|hours|minutes)=x
+        usage: esmcheckds2 <-d|-h|-m> <timeframe> [OPTIONS]
 
-**Examples:**
+**Timeframe Options:**
 
+      -d, --days <num>     Days since datasource active
+      -h, --hours <num>    Hours since datasource active
+      -m, --minutes <num>  Minutes since datasource active
+
+*Note: Zero (0) can be supplied for any of the options to show all devices.*
+      
+**Additional Options:**
+
+      -f, --format         Results format: csv, text, word (default: ascii)
+      -w, --write <file>   Output to file (default: ds_results.txt)
+      -v, --version        Print version
+      --disabled           Include disabled datasources (default: excluded)
+      --epo                Include EPO devices (default: excluded)
+      --parents            Inlude parent devices for client groups       
+      --debug              Enable debug output
+      --help               Show this help message and exit        
+      
+---------
+Examples:
+---------
+
+*Note: All time frames are automatically converted to GMT which is how the ESM stores time.*
+
+Show all non-disabled datasources that have not sent an event in the past hour:
 ::
 
-        esmcheckds2 days=2
-        esmcheckds2 hours=6
-        esmcheckds2 minutes=60
+        $ esmcheckds2 -h 1
+        
+        Datasources without events since: 08/16/2017 14:19:59
+        +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
+        |   name                            |        IP       |                   Type                       |             Parent Device              |      Last Time      |
+        +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
+        |   Historical Correlation Engine   |  172.12.109.41  |              Correlation Engine              | Adv Correlation Engine Historical _41_ | 2017/04/13 20:21:32 |
+        |   Test 1                          |  172.12.109.92  |                Load Balancer                 |   Event Receiver - 4600 - EBC _133_    |        never        |
+        |   Test2                           |  172.12.109.92  |                Load Balancer                 |   Event Receiver - 4600 - EBC _133_    |        never        |
+        |   Cisco ACS VPN                   |  172.12.109.39  |                  Secure ACS                  |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Endpoint Manager                |  172.12.109.29  |            Advanced Syslog Parser            |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   NextGen Firewall                |  172.12.109.19  |             Firewall Enterprise              |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Snare                           |  172.12.109.79  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Web Gateway                     |  172.12.109.99  |                 Web Gateway                  |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Windows DC Central              |  172.12.109.89  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Windows DC East                 |  172.12.109.47  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   Windows DC West                 |  172.12.109.44  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
+        |   MalTrail                        |  172.12.110.238 |            Advanced Syslog Parser            |      Event Receiver - Demo _139_       | 2017/07/17 17:25:10 |
+        +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
 
-**Output is csv:**
 
+
+Show all non-disabled datasources regardless of the last event time:
 ::
 
-        name,ip,model,rec_name,last_time
+        $ esmcheckds2 -d 0
 
-Redirect output to file and import as a spreadsheet.
+        Datasources without events since: 08/16/2017 15:16:31
+        +------+-------------+-------+---------------+---------------------+
+        | name |      IP     |  Type | Parent Device |      Last Time      |
+        +------+-------------+-------+---------------+---------------------+
+        | app  |  10.1226.3 | Linux |     ERC-1     | 08/16/2017 15:10:45 |
+        |  gw  |  10.1226.1 | Linux |     ERC-1     | 08/16/2017 15:12:45 |
+        | Mail |  10.1226.4 | Linux |     ERC-1     | 08/16/2017 15:12:45 |
+        | NS0  | 10.1226.10 | Linux |     ERC-1     | 08/16/2017 15:12:45 |
+        | NS1  | 10.1226.12 | Linux |     ERC-1     | 08/16/2017 14:18:45 |
+        | Tool |  10.1226.6 | Linux |     ERC-1     | 08/16/2017 14:26:45 |
+        +------+-------------+-------+---------------+---------------------+
 
-**Output Sample:**
+        
 
+Show all datasources in CSV format:
 ::
-
-    $ python esmcheckds2 hours=24
+    
+    $ esmcheckds2 -m -f csv
 
     Datasources with no events since: 07/28/2017 13:25:04
     001w7tie,172.22.117.20,Windows Event Log - WMI,Receiver (events),never
@@ -76,10 +127,10 @@ Prerequisites
 -------------
 
 -  Python 3 if running as script
--  Windows platform if running as exe
 -  McAfee ESM running version 9.x or 10.x
 -  Port 443 access to the ESM
 -  NGCP credentials
+- .mfe_ini file (covered below)
 
 ------------
 Installation
@@ -93,9 +144,9 @@ Download, unzip and run at a CMD prompt.
 `Windows EXE Package <https://github.com/andywalden/esmcheckds2/releases/latest>`__
 
 
-^^^^^^^^^
+^^^^^^
 Linux:
-^^^^^^^^^
+^^^^^^
 
 Install via PIP:
 
@@ -104,9 +155,9 @@ Install via PIP:
     $ pip3 install esmcheckds2
 
 
-^^^^^^^
+^^^^^^^^^^^^^^
 Manual install 
-^^^^^^^
+^^^^^^^^^^^^^^
     
     
 `Python project and source code <https://github.com/andywalden/esmcheckds2/releases/latest>`__
@@ -116,22 +167,7 @@ Manual install
     $ unzip master.zip
     $ cd esmcheckds2
     $ python3 setup.py install
-    $ esmcheckds2
     
-    ESM-Check_DS: List inactive datasources on a McAfee ESM
-     Usage: esm-check_ds (days|hours|minutes)=x
-     Provides a list of datasources with no events since the given time unit.
-
-     Examples:
-         esm-check_ds days=2
-         esm-check_ds hours=6
-         esm-check_ds minutes=60
-
-     Output is csv:
-     name,ip,model,rec_name,last_time
-
-     Redirect output to file and import as a spreadsheet.
-
     
 -------------
 Configuration
