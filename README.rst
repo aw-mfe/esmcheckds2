@@ -54,6 +54,7 @@ Usage
       -v, --version        Print version
       --disabled           Include disabled datasources (default: excluded)
       --epo                Include EPO devices (default: excluded)
+      --parents            Inlude parent devices for client groups       
       --debug              Enable debug output
       --help               Show this help message and exit        
       

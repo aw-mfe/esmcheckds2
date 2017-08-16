@@ -148,7 +148,8 @@ def main():
       -w, --write [file]   Output to file (default: ds_results.txt)
       -v, --version        Print version
       --disabled           Include disabled datasources
-      --epo                Include EPO devices (default: excluded)      
+      --epo                Include EPO devices      
+      --parents            Inlude parent devices for client groups 
       --debug              Enable debug output
       --help               Show this help message and exit'''
     
@@ -176,6 +177,7 @@ def main():
                             choices=output_formats, help=argparse.SUPPRESS)
     parser.add_argument('--disabled', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--epo', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--parents', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--debug', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('-v', '--version', action='version', help=argparse.SUPPRESS,
                             version='%(prog)s {version}'.format(version=__version__))    
@@ -196,15 +198,16 @@ def main():
     filename = pargs.write
     include_disabled = pargs.disabled
     include_epo = pargs.epo
+    include_parents = pargs.parents
 
     esm = ESM(host, user, passwd)
     esm.login()
     _devtree = esm._build_devtree()
     output_lol = []
-    ds_types = ['3']    
+    ds_types = ['3', '256']    
     if include_epo:
         ds_types.append('20')
-    
+        
     for ds in _devtree:
         logging.debug('Enumerating datasource: {}'.format(ds['name']))
         if ds['desc_id'] not in ds_types or not ds.get('last_time'):
@@ -222,7 +225,17 @@ def main():
             else:
                 logging.debug('Skipping disabled datasource: {}'.format(ds['name']))
                 continue
-                  
+                
+        if ds['client_groups'] != '0':
+            if include_parents:
+                output_lol.append(fields)
+                logging.debug('Adding disabled datasource: {}'.format(ds['name']))
+                continue
+            else:
+                logging.debug('Skipping disabled datasource: {}'.format(ds['name']))
+                continue
+            
+        
         if ds['last_time'] == 'never':
             output_lol.append(fields)
             logging.debug('Adding never seen datasource: {}'.format(ds['name']))
