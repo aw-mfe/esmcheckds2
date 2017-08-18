@@ -235,6 +235,13 @@ $XDG\_CONFIG\_HOME. You can determine which by typing:
 One or both should list your home directory. If both options are
 available, $XDG\_CONFIG\_HOME is the more modern and recommended choice.
 
+-------
+Thanks!
+-------
+
+Thanks to rh, tad and brooksy for testing and feedback!
+
+
 ----------
 Disclaimer
 ----------
