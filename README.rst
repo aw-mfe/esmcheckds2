@@ -31,6 +31,28 @@ The script requires a .mfe\_saw.ini file for the credentials.
 
 See installation notes to determine which directory it should be placed for your operating system.
 
+----------
+QuickStart
+----------
+
+**Windows**
+
+1. Download the `latest release <https://github.com/andywalden/esmcheckds2/releases/latest>`__
+
+2. Unzip it into a directory.
+
+3. Create your .mfe_saw.ini configuration_ file.
+
+4. Run esmcheckds2.exe -d 1
+
+**Linux**
+
+1. pip3 install esmcheckds2
+
+2. Create your .mfe_saw.ini configuration_ file.
+
+3. Run esmcheckds2.exe -d 1
+
 -----
 Usage
 -----
@@ -139,7 +161,7 @@ Installation
 ^^^^^^^
 Windows:
 ^^^^^^^
-Download, unzip and run at a CMD prompt.
+Download, unzip and  at a CMD prompt.
 
 `Windows EXE Package <https://github.com/andywalden/esmcheckds2/releases/latest>`__
 
@@ -168,7 +190,7 @@ Manual install
     $ cd esmcheckds2
     $ python3 setup.py install
     
-    
+.. _configuration:
 -------------
 Configuration
 -------------
@@ -212,6 +234,13 @@ $XDG\_CONFIG\_HOME. You can determine which by typing:
 
 One or both should list your home directory. If both options are
 available, $XDG\_CONFIG\_HOME is the more modern and recommended choice.
+
+-------
+Thanks!
+-------
+
+Thanks to rh, tad and brooksy for testing and feedback!
+
 
 ----------
 Disclaimer
