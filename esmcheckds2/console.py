@@ -203,6 +203,7 @@ def main():
     esm = ESM(host, user, passwd)
     esm.login()
     _devtree = esm._build_devtree()
+    
     output_lol = []
     ds_types = ['3', '256']    
     if include_epo:
@@ -216,7 +217,7 @@ def main():
 
         fields = [ds['name'], ds['ds_ip'], ds['model'], 
                   ds['parent_name'], ds['last_time']]
-
+        
         if ds['enabled'] == 'F':
             if include_disabled:
                 output_lol.append(fields)
@@ -229,10 +230,10 @@ def main():
         if ds['client_groups'] != '0':
             if include_parents:
                 output_lol.append(fields)
-                logging.debug('Adding disabled datasource: {}'.format(ds['name']))
+                logging.debug('Adding container datasource: {}'.format(ds['name']))
                 continue
             else:
-                logging.debug('Skipping disabled datasource: {}'.format(ds['name']))
+                logging.debug('Skipping container datasource: {}'.format(ds['name']))
                 continue
             
         

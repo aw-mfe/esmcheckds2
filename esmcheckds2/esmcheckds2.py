@@ -10,7 +10,9 @@ import requests
 import sys
 import urllib.parse as urlparse
 from io import StringIO
+from collections import Counter
 from configparser import ConfigParser, NoSectionError
+from itertools import chain
 
 requests.packages.urllib3.disable_warnings()
 
@@ -139,8 +141,9 @@ class ESM(object):
             print('ESM Login Error:', self._resp.text)
             sys.exit(1)
 
-            
+        # Flush auth info     
         self._data = ''
+        
         self._headers = {'Content-Type': 'application/json'}
         self._headers['Cookie'] = self._resp.headers.get('Set-Cookie')
         self._headers['X-Xsrf-Token'] = self._resp.headers.get('Xsrf-Token')
@@ -189,8 +192,11 @@ class ESM(object):
         self._last_times = self._get_last_times()
         self._last_times = self._format_times(self._last_times)
         self._devtree = self._insert_ds_last_times(self._last_times)
+                       
         return self._devtree
 
+        
+        
     def _get_devtree(self):
         """
         Returns:
@@ -232,14 +238,13 @@ class ESM(object):
             if self._row[2] == "3":  # Client group datasource group containers
                 self._row.pop(0)     # are fake datasources that seemingly have
                 self._row.pop(0)     # two uneeded fields at the beginning.
-
             if self._row[16] == 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT':
                 self._row[16] = '0'  # Get rid of weird type-id for N/A devices
             
             if len(self._row) < 29:
                 #print('Unknown datasource: {}.'.format(self._row))
                 continue
-
+            
             self._ds_fields = {'idx': self._idx,
                                'desc_id': self._row[0],
                                'name': self._row[1],
@@ -260,6 +265,7 @@ class ESM(object):
                                'client': False
                                }
             self._devtree_lod.append(self._ds_fields)
+
         return self._devtree_lod
 
     def _get_client_containers(self):
@@ -330,7 +336,6 @@ class ESM(object):
         self._clients_lod = []
         for self._row in self._clients_csv:
             if len(self._row) < 13:
-                #print('Unknown Datasource:', self._row)
                 continue
 
             self._ds_fields = {'desc_id': "256",
@@ -364,24 +369,37 @@ class ESM(object):
             List of datasource dicts
         """
         self._pid = '0'
+        
+        self._esm_dev_id = ['14']
+        self._esm_mfe_dev_id = ['19', '21', '22', '24']
+        self._esm_child_dev_id = ['2', '4', '10', '12', '13', '15']
+        self._esm_granchild_dev_id = ['3', '5', '7', '17', '20', '23', '256']
+        
         for self._ds in self._devtree:
-            if self._ds['desc_id'] in ['14']:
+            if self._ds['desc_id'] in self._esm_dev_id:
                 self._esm_name = self._ds['name']
                 self._esm_id = self._ds['ds_id']
-                self._ds['parent_id'] = '0'
                 self._ds['parent_name'] = 'n/a'
+                self._ds['parent_id'] = '0'
+                continue
 
-            if self._ds['desc_id'] in ['2', '4', '10', '12', '13', '15']:
+            if self._ds['desc_id'] in self._esm_mfe_dev_id:
+                self._parent_name = self._ds['name']
+                self._parent_id = self._ds['ds_id']
+                self._ds['parent_name'] = 'n/a'
+                self._ds['parent_id'] = '0'
+                continue
+            
+            if self._ds['desc_id'] in self._esm_child_dev_id:
                 self._ds['parent_name'] = self._esm_name
                 self._ds['parent_id'] = self._esm_id
                 self._parent_name = self._ds['name']
                 self._pid = self._ds['ds_id']
                 continue
 
-            if self._ds['desc_id'] in ['3', '5', '7', '17', '19',
-                                       '20', '21', '22', '24', '256']:
-                self._ds['parent_id'] = self._pid
+            if self._ds['desc_id'] in self._esm_granchild_dev_id:
                 self._ds['parent_name'] = self._parent_name
+                self._ds['parent_id'] = self._pid
             else:
                 self._ds['parent_name'] = 'n/a'
                 self._ds['parent_id'] = 'n/a'
@@ -495,7 +513,7 @@ class ESM(object):
         if 400 <= self._resp.status_code <= 600:
             print('ESM Error:', self._resp.text)
             sys.exit(1)
-
+           
     @staticmethod
     def _post(url, data=None, headers=None, verify=False):
         """
