@@ -203,6 +203,7 @@ def main():
     esm = ESM(host, user, passwd)
     esm.login()
     _devtree = esm._build_devtree()
+    esm.logout()
     
     output_lol = []
     ds_types = ['3', '256']    

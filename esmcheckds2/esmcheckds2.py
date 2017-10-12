@@ -141,14 +141,17 @@ class ESM(object):
             print('ESM Login Error:', self._resp.text)
             sys.exit(1)
 
-        # Flush auth info     
-        self._data = ''
-        
         self._headers = {'Content-Type': 'application/json'}
         self._headers['Cookie'] = self._resp.headers.get('Set-Cookie')
         self._headers['X-Xsrf-Token'] = self._resp.headers.get('Xsrf-Token')
         self._headers['SID'] = self._resp.headers.get('Location')
 
+    def logout(self):
+        """
+        """
+        self._url = self._base_url + 'logout'
+        self._resp = requests.delete(self._url, headers=self._headers, verify=False)
+                
     def _build_devtree(self):
         """
         Coordinates assembly of the devtree
