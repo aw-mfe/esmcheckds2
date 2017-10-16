@@ -140,8 +140,7 @@ Show all datasources in CSV format:
 ::
     
     $ esmcheckds2 -a -f csv
-
-    Datasources with no events since: 07/28/2017 13:25:04
+    name,IP,Type,Parent Device,Last Time
     001w7tie,172.22.117.20,Windows Event Log - WMI,Receiver (events),never
     ATD_test,10.75.113.5,Advanced Threat Defense,Receiver (events),12/01/2015 17:43:19
     esx000,172.22.119.34,VMware,Receiver (events),10/02/2015 15:19:05
