@@ -71,12 +71,12 @@ Usage
       
 **Additional Options:**
 
-      -z, --zone [zone]    Limit devices to zone
+      -z, --zone <zone>    Limit devices to zone
       --disabled           Exclude disabled devices
       --mfe                Exclude top level McAfee devices (EPO, NSM...)
       --siem               Exclude SIEM devices (ESM, ERC...)
       -f, --format         Results format: csv, text, word (default: csv)
-      -w, --write [file]   Output to file (default: ds_results.txt)
+      -w, --write <file>   Output to file (default: ds_results.txt)
       -v, --version        Print version
       --debug              Enable debug output
       --help               Show this help message and exit      
