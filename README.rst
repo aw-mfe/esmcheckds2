@@ -71,7 +71,7 @@ Usage
       
 **Additional Options:**
 
-     -z, --zone [zone]    Limit devices to zone
+      -z, --zone [zone]    Limit devices to zone
       --disabled           Exclude disabled devices
       --mfe                Exclude top level McAfee devices (EPO, NSM...)
       --siem               Exclude SIEM devices (ESM, ERC...)
