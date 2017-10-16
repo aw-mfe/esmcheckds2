@@ -43,7 +43,7 @@ QuickStart
 
 3. Create your .mfe_saw.ini configuration_ file.
 
-4. Run esmcheckds2.exe -d 1
+4. Run esmcheckds2.exe -a
 
 **Linux**
 
@@ -51,7 +51,7 @@ QuickStart
 
 2. Create your .mfe_saw.ini configuration_ file.
 
-3. Run esmcheckds2.exe -d 1
+3. Run esmcheckds2.exe -a
 
 -----
 Usage
@@ -59,7 +59,7 @@ Usage
 
 ::
 
-        usage: esmcheckds2 <-d|-h|-m> <timeframe> [OPTIONS]
+        usage: esmcheckds2 <-d|-h|-m|-a|--future> <timeframe> [OPTIONS]
 
 **Timeframe Options:**
 
@@ -107,13 +107,13 @@ Show all non-disabled datasources that have not sent an event in the past hour:
         |   Windows DC West                 |  172.12.109.44  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
         |   MalTrail                        |  172.12.110.238 |            Advanced Syslog Parser            |      Event Receiver - Demo _139_       | 2017/07/17 17:25:10 |
         +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
-        Host: esm.smcebc.intelsecurity.com | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 12
+        Host: 10.0.0.10 | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 12
 
 
 Show all non-disabled datasources regardless of the last event time:
 ::
 
-        $ esmcheckds2 -a
+        $ esmcheckds2 -a --disabled
         +------+-------------+-------+---------------+---------------------+
         | name |      IP     |  Type | Parent Device |      Last Time      |
         +------+-------------+-------+---------------+---------------------+
@@ -124,8 +124,17 @@ Show all non-disabled datasources regardless of the last event time:
         | NS1  | 10.1226.12 | Linux |     ERC-1     | 08/16/2017 14:18:45 |
         | Tool |  10.1226.6 | Linux |     ERC-1     | 08/16/2017 14:26:45 |
         +------+-------------+-------+---------------+---------------------+
-        Host: esm.smcebc.intelsecurity.com | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 6
-        
+        Host: 10.0.0.10 | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 6
+
+Show all datasources for a particular zone idle for over a day:
+::
+
+        +-----------------------------+---------------+--------------------------+-----------------------------+-----------+
+        |             name            |       IP      |           Type           |        Parent Device        | Last Time |
+        +-----------------------------+---------------+--------------------------+-----------------------------+-----------+
+        | Intrusion Prevention System | 172.16.19.149 | Network Security Manager | Event Receiver - 4600 _134_ |   never   |
+        +-----------------------------+---------------+--------------------------+-----------------------------+-----------+
+        Host: 10.0.0.10 | ESM Time UTC: 2017-10-16 20:21:11 | Time Offset: 2017-10-15 20:21:11 | Zone: demo | Device Count: 1        
 
 Show all datasources in CSV format:
 ::
