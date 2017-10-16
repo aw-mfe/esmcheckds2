@@ -191,6 +191,10 @@ class ESM(object):
                 self._cidx += 1
                 self._didx += 1
             self._devtree[self._pidx:self._pidx] = self._clients_lod
+        self._zonetree = self._get_zonetree()
+        self._devtree = self._insert_zone_names()
+        self._zone_map = self._get_zone_map()
+        self._devtree = self._insert_zone_ids()            
         self._devtree = self._insert_rec_info()
         self._last_times = self._get_last_times()
         self._last_times = self._format_times(self._last_times)
@@ -362,6 +366,79 @@ class ESM(object):
             self._clients_lod.append(self._ds_fields)
         return self._clients_lod
 
+    def _get_zonetree(self):
+        """
+        Abuses the device tree for zone data.
+        
+        Returns:
+            str: device tree string sorted by zones
+        """
+        
+        self._method = 'GRP_GETVIRTUALGROUPIPSLISTDATA'
+        self._data = {'ITEMS': '#{DC1 + DC2}',
+                        'DID': '3',
+                        'HD': 'F',
+                        'NS': '0'}
+                        
+        if self._headers.get('SID') is not None:
+            self._data['SID'] = self._headers['SID']
+
+        self._resp = self.post(self._method, data=self._data, headers=self._headers)
+        return dehexify(self._resp['ITEMS'])
+
+            
+    def _insert_zone_names(self):
+        """
+        Args:
+            _zonetree (str): set in __init__
+        
+        Returns:
+            List of dicts (str: str) devices by zone
+        """
+        self._zone_name = None
+        self._zonetree_io = StringIO(self._zonetree)
+        self._zonetree_csv = csv.reader(self._zonetree_io, delimiter=',')
+        self._zonetree_lod = []
+
+        for self._row in self._zonetree_csv:
+            if self._row[0] == '1':
+                self._zone_name = self._row[1]
+                if self._zone_name == 'Undefined':
+                    self._zone_name = ''
+                continue
+            for self._dev in self._devtree:
+                if self._dev['ds_id'] == self._row[2]:
+                    self._dev['zone_name'] = self._zone_name
+        return self._devtree
+
+            
+    def _get_zone_map(self):
+        """
+        Builds a table of zone names to zone ids.
+        
+        Returns:
+            dict (str: str) zone name : zone ids
+        """
+        self._zone_map = {}
+        self._method = 'zoneGetZoneTree'
+        self._resp = self.post(self._method, headers=self._headers)
+        for self._zone in self._resp:
+            self._zone_map[self._zone['name']] = self._zone['id']['value']
+            for self._szone in self._zone['subZones']:
+                self._zone_map[self._szone['name']] = self._szone['id']['value']
+        return self._zone_map
+        
+            
+    def _insert_zone_ids(self):
+        """
+        """
+        for self._dev in self._devtree:
+            if self._dev['zone_name'] in self._zone_map.keys():
+                self._dev['zone_id'] = self._zone_map.get(self._dev['zone_name'])
+            else:
+                self._dev['zone_id'] = '0'
+        return self._devtree
+
     def _insert_rec_info(self):
         """
         Adds parent_ids to datasources in the tree based upon the
@@ -471,6 +548,18 @@ class ESM(object):
                     self._ds['model'] = self._time['model']
                     self._ds['last_time'] = self._time['last_time']
         return self._devtree
+
+    def time(self):
+        """
+        Returns:
+            str. ESM time (GMT).
+
+        Example:
+            '2017-07-06T12:21:59.0+0000'
+        """
+        self._method = 'essmgtGetESSTime'
+        self._resp = self.post(self._method, headers=self._headers)
+        return self._resp['value']
 
     def post(self, method, data=None, callback=None, raw=None,
              headers=None, verify=False):
@@ -582,7 +671,6 @@ def dehexify(data):
     """
     Decode hex/url data
     """
-
     hexen = {
         '\x1c': ',',  # Replacing Device Control 1 with a comma.
         '\x11': ',',  # Replacing Device Control 2 with a new line.
@@ -623,23 +711,3 @@ def dehexify(data):
         data = data.replace(enc, dec)
 
     return data
-
-
-def _print_help_and_exit():
-
-    print("""ESM-Check_DS: List inactive datasources on a McAfee ESM
-  Usage: esm-check_ds (days|hours|minutes)=x
-  Provides a list of datasources with no events since the given time unit.
-
-    Examples:
-        esm-check_ds days=2
-        esm-check_ds hours=6
-        esm-check_ds minutes=60
-
-Output is csv:
-    name,ip,model,rec_name,last_time
-
-Redirect output to file and import as a spreadsheet.
-
-    """)
-    sys.exit(0)

@@ -66,19 +66,20 @@ Usage
       -d, --days <num>     Days since datasource active
       -h, --hours <num>    Hours since datasource active
       -m, --minutes <num>  Minutes since datasource active
-
-*Note: Zero (0) can be supplied for any of the options to show all devices.*
+      -a, --all            Show all devices
+      --future             Only devices with time in future
       
 **Additional Options:**
 
-      -f, --format         Results format: csv, text, word (default: ascii)
-      -w, --write <file>   Output to file (default: ds_results.txt)
+     -z, --zone [zone]    Limit devices to zone
+      --disabled           Exclude disabled devices
+      --mfe                Exclude top level McAfee devices (EPO, NSM...)
+      --siem               Exclude SIEM devices (ESM, ERC...)
+      -f, --format         Results format: csv, text, word (default: csv)
+      -w, --write [file]   Output to file (default: ds_results.txt)
       -v, --version        Print version
-      --disabled           Include disabled datasources (default: excluded)
-      --epo                Include EPO devices (default: excluded)
-      --parents            Inlude parent devices for client groups       
       --debug              Enable debug output
-      --help               Show this help message and exit        
+      --help               Show this help message and exit      
       
 ---------
 Examples:
@@ -90,8 +91,6 @@ Show all non-disabled datasources that have not sent an event in the past hour:
 ::
 
         $ esmcheckds2 -h 1
-        
-        Datasources without events since: 08/16/2017 14:19:59
         +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
         |   name                            |        IP       |                   Type                       |             Parent Device              |      Last Time      |
         +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
@@ -108,15 +107,13 @@ Show all non-disabled datasources that have not sent an event in the past hour:
         |   Windows DC West                 |  172.12.109.44  |              Snare for Windows               |      Event Receiver - 4600 _134_       | 2017/08/16 08:13:03 |
         |   MalTrail                        |  172.12.110.238 |            Advanced Syslog Parser            |      Event Receiver - Demo _139_       | 2017/07/17 17:25:10 |
         +-----------------------------------+-----------------+----------------------------------------------+----------------------------------------+---------------------+
-
+        Host: esm.smcebc.intelsecurity.com | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 12
 
 
 Show all non-disabled datasources regardless of the last event time:
 ::
 
-        $ esmcheckds2 -d 0
-
-        Datasources without events since: 08/16/2017 15:16:31
+        $ esmcheckds2 -a
         +------+-------------+-------+---------------+---------------------+
         | name |      IP     |  Type | Parent Device |      Last Time      |
         +------+-------------+-------+---------------+---------------------+
@@ -127,13 +124,13 @@ Show all non-disabled datasources regardless of the last event time:
         | NS1  | 10.1226.12 | Linux |     ERC-1     | 08/16/2017 14:18:45 |
         | Tool |  10.1226.6 | Linux |     ERC-1     | 08/16/2017 14:26:45 |
         +------+-------------+-------+---------------+---------------------+
-
+        Host: esm.smcebc.intelsecurity.com | Current UTC: 2017-10-16 20:03:17 | Time Offset: False | Zone: False | Device Count: 6
         
 
 Show all datasources in CSV format:
 ::
     
-    $ esmcheckds2 -m -f csv
+    $ esmcheckds2 -a -f csv
 
     Datasources with no events since: 07/28/2017 13:25:04
     001w7tie,172.22.117.20,Windows Event Log - WMI,Receiver (events),never
@@ -148,10 +145,11 @@ Show all datasources in CSV format:
 Prerequisites
 -------------
 
+-  Windows device for the EXE
 -  Python 3 if running as script
 -  McAfee ESM running version 9.x or 10.x
 -  Port 443 access to the ESM
--  NGCP credentials
+-  ESM Credentials and proper permissions
 - .mfe_ini file (covered below)
 
 ------------
@@ -195,10 +193,9 @@ Manual install
 Configuration
 -------------
 
-This script requires a '.mfe\_saw.ini' file in your home directory. This
-file contains sensitive clear text credentials for the McAfee ESM so it
-is important it be protected. This is same ini file will be referenced
-by all future ESM related projects also.
+This script requires a '.mfe\_saw.ini' file the local directory or in your 
+home directory. This file contains sensitive clear text credentials for 
+the McAfee ESM so it is important it be protected. 
 
 It looks like this:
 
