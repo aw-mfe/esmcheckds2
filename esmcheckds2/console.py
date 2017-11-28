@@ -131,11 +131,11 @@ def main():
         print("Cannot find 'esmpass' key in .mfe_saw.ini")
         sys.exit(0)
     helpdoc = '''\
-    usage: esmcheckds2 <-d|-h|-m> <timeframe> [OPTIONS]
+    usage: esmcheckds2 <-d|-h|-m|-a|--future> <timeframe> [OPTIONS]
 
     Show McAfee ESM Datasource Activity
     Specify days, hours, minutes 
-    Example: esmcheckds2 -d 7
+    Example: esmcheckds2 -d 1
              esmcheckds2 -a --disabled
              
     Timeframe Options:
@@ -150,9 +150,8 @@ def main():
       --disabled           Exclude disabled devices
       --mfe                Exclude top level McAfee devices (EPO, NSM...)
       --siem               Exclude SIEM devices (ESM, ERC...)
-      -f, --format         Results format: csv, text, word (default: csv)
+      -f, --format         Result format: csv, text, MS word 
       -w, --write [file]   Output to file (default: ds_results.txt)
-      
       -v, --version        Print version
       --debug              Enable debug output
       --help               Show this help message and exit'''

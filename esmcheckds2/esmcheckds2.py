@@ -140,7 +140,7 @@ class ESM(object):
         elif 402 <= self._resp.status_code <= 600:
             print('ESM Login Error:', self._resp.text)
             sys.exit(1)
-
+        
         self._headers = {'Content-Type': 'application/json'}
         self._headers['Cookie'] = self._resp.headers.get('Set-Cookie')
         self._headers['X-Xsrf-Token'] = self._resp.headers.get('Xsrf-Token')
@@ -234,13 +234,27 @@ class ESM(object):
         self._devtree_io = StringIO(self._devtree)
         self._devtree_csv = csv.reader(self._devtree_io, delimiter=',')
         self._devtree_lod = []
+        self._ignore_remote_ds = False
 
         for self._idx, self._row in enumerate(self._devtree_csv, start=1):
             if len(self._row) == 0:
                 continue
 
-            if self._row[0] == '16':  # Get rid of duplicate 'asset' devices
+            # Get rid of duplicate 'asset' devices
+            if self._row[0] == '16':  
                 continue
+
+            # Filter out distributed ESMs                
+            if self._row[0] == '9':  
+                self._ignore_remote_ds = True
+                continue
+            
+            # Filter out distributed ESM data sources
+            if self._ignore_remote_ds:  
+                if self._row[0] != '14':
+                    continue
+                else:
+                    self._ignore_remote_ds = False
 
             if self._row[2] == "3":  # Client group datasource group containers
                 self._row.pop(0)     # are fake datasources that seemingly have
@@ -364,8 +378,8 @@ class ESM(object):
                                'client': True
                                }
             self._clients_lod.append(self._ds_fields)
-        return self._clients_lod
-
+        return self._clients_lod        
+        
     def _get_zonetree(self):
         """
         Abuses the device tree for zone data.
@@ -449,12 +463,12 @@ class ESM(object):
             List of datasource dicts
         """
         self._pid = '0'
-        
         self._esm_dev_id = ['14']
         self._esm_mfe_dev_id = ['19', '21', '22', '24']
-        self._esm_child_dev_id = ['2', '4', '10', '12', '13', '15']
-        self._esm_granchild_dev_id = ['3', '5', '7', '17', '20', '23', '256']
+        self._nitro_dev_id = ['2', '4', '10', '12', '13', '15']
+        self._datasource_dev_id = ['3', '5', '7', '17', '20', '23', '256']
         
+                   
         for self._ds in self._devtree:
             if self._ds['desc_id'] in self._esm_dev_id:
                 self._esm_name = self._ds['name']
@@ -470,14 +484,14 @@ class ESM(object):
                 self._ds['parent_id'] = '0'
                 continue
             
-            if self._ds['desc_id'] in self._esm_child_dev_id:
+            if self._ds['desc_id'] in self._nitro_dev_id:
                 self._ds['parent_name'] = self._esm_name
                 self._ds['parent_id'] = self._esm_id
                 self._parent_name = self._ds['name']
                 self._pid = self._ds['ds_id']
                 continue
 
-            if self._ds['desc_id'] in self._esm_granchild_dev_id:
+            if self._ds['desc_id'] in self._datasource_dev_id:
                 self._ds['parent_name'] = self._parent_name
                 self._ds['parent_id'] = self._pid
             else:
@@ -557,6 +571,11 @@ class ESM(object):
         Example:
             '2017-07-06T12:21:59.0+0000'
         """
+
+        if self._headers.get('SID') is not None:
+            self._session = {'SID': self._headers['SID']}
+            self._data = self._session
+
         self._method = 'essmgtGetESSTime'
         self._resp = self.post(self._method, headers=self._headers)
         return self._resp['value']

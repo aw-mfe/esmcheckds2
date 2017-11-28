@@ -12,7 +12,7 @@ This script queries a McAfee ESM for inactive data sources.
 
 -  Completely rewritten to perform a set of limited queries regardless of the number of datasources.
 
--  McAfee ESM 9.x and 10.x versions are now supported in a single script.
+-  McAfee ESM 9.x and 10.2.x+ versions are now supported in a single script.
 
 -  Additional information provided for each datasource (IP, parent device name).
 
@@ -22,14 +22,7 @@ This script queries a McAfee ESM for inactive data sources.
 
 -  Settings stored in ini file in secure directory.
 
-If you do not want to run the Windows EXE then you will need to make sure Python 3 is installed.
-
-Directions on how to install and create an environment to run the script on both Linux and Windows are available at:
-https://community.mcafee.com/people/andy777/blog/2016/11/29/installing-python-3
-
-The script requires a .mfe\_saw.ini file for the credentials. 
-
-See installation notes to determine which directory it should be placed for your operating system.
+* If you're running 10.0.0, 10.0.0MR1 or 10.1.0 then please upgrade.
 
 ----------
 QuickStart
@@ -153,16 +146,29 @@ Show all datasources in CSV format:
 Prerequisites
 -------------
 
--  Windows device for the EXE
 -  Python 3 if running as script
--  McAfee ESM running version 9.x or 10.x
--  Port 443 access to the ESM
--  ESM Credentials and proper permissions
+- Python modules in the requirements file
+-  McAfee ESM running version 9.x or 10.2.0+
+-  IP connectivity 443 access to the ESM
+-  ESM Credentials and proper permissions 
 - .mfe_ini file (covered below)
 
 ------------
 Installation
 ------------
+
+Both Windows and Linux are supported. Binaries are provided for both operating systems. You can simply download and unzip the file, input your credentials and run the binary.
+
+If you want to run the script directly the system must have Python 3 and the required modules installed. 
+
+Directions on how to install and create an environment to run the script on both Linux and Windows are available at:
+https://community.mcafee.com/people/andy777/blog/2016/11/29/installing-python-3
+
+The script requires a .mfe\_saw.ini file for the credentials. 
+
+See installation notes to determine which directory it should be placed for your operating system.
+
+
 
 ^^^^^^^
 Windows:
@@ -226,8 +232,8 @@ enter. This will open your Windows home directory. Edit the Copy the
 customized .mfe\_saw.ini (period in front) to the directory.
 
 ^^^^^^^^^^
-Linux\*nix
-^^^^^^^^^^
+Linux
+^^^^^
 
 The '.mfe\_saw.ini' file will either live in: $HOME or:
 $XDG\_CONFIG\_HOME. You can determine which by typing:
@@ -244,7 +250,7 @@ available, $XDG\_CONFIG\_HOME is the more modern and recommended choice.
 Thanks!
 -------
 
-Thanks to rh, tad and brooksy for testing and feedback!
+Thanks to rh, tad, brooksy, Jeromy and Jason L. for testing and feedback!
 
 
 ----------
