@@ -256,6 +256,9 @@ class ESM(object):
                 else:
                     self._ignore_remote_ds = False
 
+            try: # Permissions check
+            
+            
             if self._row[2] == "3":  # Client group datasource group containers
                 self._row.pop(0)     # are fake datasources that seemingly have
                 self._row.pop(0)     # two uneeded fields at the beginning.
@@ -532,6 +535,7 @@ class ESM(object):
             print('ESM returned an error while getting event times.')
             print('Does this account have permissions to see the ', end='')
             print('"View Reports" button under System Properties in the ESM?')
+            print('The "Administrator Rights" box must be checked for the user.')
             sys.exit(1)
         self._last_times_io = StringIO(self._last_times)
         self._last_times_csv = csv.reader(self._last_times_io, delimiter=',')

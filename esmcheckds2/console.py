@@ -29,28 +29,28 @@ def logging_init():
 
 def _get_time_obj(time_str):
     """
-    In some ESM versions the time format is YYYY/MM/DD instead of
-    DD/MM/YYYY. This detects and normalizes to the latter.
-
+    Converts given timestamp string to datetime object
+    
     Args:
-        last_time (str): timestamp in format 'YYYY/MM/DD HH:MM:SS' 
-                         or 'DD/MM/YYYY HH:MM:SS'
+        last_time (str): timestamp in format 'YYYY/MM/DD HH:MM:SS',
+                         'MM/DD/YYYY HH:MM:SS', or 'DD/MM/YYYY HH:MM:SS'
                          
     Returns:
-        str of timestamp in 'DD/MM/YYYY HH:MM:SS' format 
-            or None if neither format matches
+        datetime object or None if no format matches
     """
     time_format1 = '%m/%d/%Y %H:%M:%S'
     time_format2 = '%Y/%m/%d %H:%M:%S'
-
+    time_format3 = '%d.%m.%Y %H:%M:%S'
+    
     try: 
         time_obj = datetime.strptime(time_str, time_format1)
     except ValueError:
-        try:
-            time_obj = datetime.strptime(time_str, time_format2)
-        except ValueError:
-            logging.debug('Invalid time format: {}'.format(time_str))
-            time_obj = None
+        time_obj = datetime.strptime(time_str, time_format2)
+    except ValueError:
+        time_obj = datetime.strptime(time_str, time_format3)
+    except ValueError:
+        logging.debug('Invalid time format: {}'.format(time_str))
+        time_obj = None
     return time_obj
 
 def lol_to_table(lol, format=None, headers=None):

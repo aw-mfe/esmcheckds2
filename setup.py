@@ -15,8 +15,8 @@ requirements = ['requests', 'prettytable']
         
 setup(
     name='esmcheckds2',
-    version='0.0.7',
-    description="Queries McAfee ESM v9.x or v10.x for inactive data sources.",
+    version='0.0.8',
+    description="Queries McAfee ESM v9.6.x or v10.1.0+ for inactive data sources.",
     author="Andy Walden",
     author_email='aw@krakencodes.com',
     url='https://github.com/andywalden/esmcheckds2',
