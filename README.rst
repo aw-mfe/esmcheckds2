@@ -231,7 +231,7 @@ Go to Start \| Run and type %APPDATA% into the box and press
 enter. This will open your Windows home directory. Edit the Copy the
 customized .mfe\_saw.ini (period in front) to the directory.
 
-^^^^^^^^^^
+^^^^^
 Linux
 ^^^^^
 
