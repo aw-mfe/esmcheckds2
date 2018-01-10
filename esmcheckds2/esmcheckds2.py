@@ -256,8 +256,6 @@ class ESM(object):
                 else:
                     self._ignore_remote_ds = False
 
-            try: # Permissions check
-            
             
             if self._row[2] == "3":  # Client group datasource group containers
                 self._row.pop(0)     # are fake datasources that seemingly have
