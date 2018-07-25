@@ -6,17 +6,18 @@ try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
+
+requirements = ['requests', 'prettytable']
         
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-#test_requirements = ['pytest', 'tox']
-requirements = ['requests', 'prettytable']
+exec(open('esmcheckds2/version.py').read())
         
 setup(
     name='esmcheckds2',
-    version='0.0.8b',
-    description="Queries McAfee ESM v9.6.x or v10.1.0+ for inactive data sources.",
+    version=__version__,
+    description="McAfee ESM Data Source Reporting",
     author="Andy Walden",
     author_email='aw@krakencodes.com',
     url='https://github.com/andywalden/esmcheckds2',
@@ -39,6 +40,4 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3 :: Only'],
-    #test_suite='tests',
-    #tests_require=test_requirements,
     python_requires='>=3')
