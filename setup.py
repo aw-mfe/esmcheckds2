@@ -7,7 +7,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-requirements = ['requests', 'prettytable']
+requirements = ['requests', 'prettytable', 'dateutil']
         
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -29,7 +29,7 @@ setup(
     license="ISC",
     keywords='esmcheckds2',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: ISC License (ISCL)',
         'Natural Language :: English',

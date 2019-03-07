@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import sys
+import dateutil.parser as dateparser
 from configparser import ConfigParser, NoSectionError, MissingSectionHeaderError
 from datetime import datetime, timedelta
 from io import StringIO
@@ -32,26 +33,13 @@ def _get_time_obj(time_str):
     Converts given timestamp string to datetime object
     
     Args:
-        last_time (str): timestamp in format 'YYYY/MM/DD HH:MM:SS',
-                         'MM/DD/YYYY HH:MM:SS', or 'DD/MM/YYYY HH:MM:SS'
+        time_str (str): time as a string, e.g. 2019/02/28 22:22:22
                          
     Returns:
-        datetime object or None if no format matches
+        datetime object or None if no format matches 
+        
     """
-    time_format1 = '%m/%d/%Y %H:%M:%S'
-    time_format2 = '%Y/%m/%d %H:%M:%S'
-    time_format3 = '%d.%m.%Y %H:%M:%S'
-    
-    try: 
-        time_obj = datetime.strptime(time_str, time_format1)
-    except ValueError:
-        time_obj = datetime.strptime(time_str, time_format2)
-    except ValueError:
-        time_obj = datetime.strptime(time_str, time_format3)
-    except ValueError:
-        logging.debug('Invalid time format: {}'.format(time_str))
-        time_obj = None
-    return time_obj
+    return dateparser.parse(time_str)
 
 def lol_to_table(lol, format=None, headers=None):
     """
@@ -150,6 +138,7 @@ def main():
       --disabled           Exclude disabled devices
       --mfe                Exclude top level McAfee devices (EPO, NSM...)
       --siem               Exclude SIEM devices (ESM, ERC...)
+      --dsid               Display the Datasource ID field
       -f, --format         Result format: csv, text, MS word 
       -w, --write [file]   Output to file (default: ds_results.txt)
       -v, --version        Print version
@@ -182,6 +171,7 @@ def main():
     parser.add_argument('--disabled', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--mfe', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--siem', action='store_true', help=argparse.SUPPRESS)
+    parser.add_argument('--dsid', action='store_true', help=argparse.SUPPRESS)
     
 
     parser.add_argument('-f', '--format', default=None, dest='out_format', 
@@ -202,6 +192,7 @@ def main():
     exclude_disabled = pargs.disabled
     exclude_mfe = pargs.mfe
     exclude_siem = pargs.siem
+    dsid = pargs.dsid
     future_only = pargs.future
     show_all = pargs.show_all
     
@@ -273,7 +264,11 @@ def main():
         
         fields = [ds['name'], ds['ds_ip'], ds['model'], 
                   ds['parent_name'], ds['last_time']]
-        headers = ['name', 'IP', 'Type', 'Parent Device', 'Last Time']
+        headers = ['Name', 'IP', 'Type', 'Parent Device', 'Last Time']
+        
+        if dsid:
+            fields.insert(1, ds['ds_id'])
+            headers.insert(1, 'DS ID')
                 
         if exclude_disabled:
             if ds['enabled'] == 'F':

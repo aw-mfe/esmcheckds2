@@ -730,5 +730,7 @@ def dehexify(data):
 
     for (enc, dec) in uri.items():
         data = data.replace(enc, dec)
+    
+    data = urlparse.unquote(data)
 
     return data

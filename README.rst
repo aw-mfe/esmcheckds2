@@ -2,19 +2,15 @@
 McAfee SIEM Check Datasources: esmdscheck2
 ==========================================
 
-This script queries a McAfee ESM for inactive data sources.
+This script queries a McAfee ESM for inactive data sources and provides general data source reporting.
 
-**Updates from esm-check-ds v1:**
+**Features:**
 
--  New Name!
-
--  Order of magnitude faster!
-
--  Completely rewritten to perform a set of limited queries regardless of the number of datasources.
-
--  McAfee ESM 9.x and 10.2.x+ versions are now supported in a single script.
+-  McAfee ESM 9.x and 10.2.x+ and 11.x versions are all supported.
 
 -  Additional information provided for each datasource (IP, parent device name).
+
+- Supports Parent, Child and Client data sources.
 
 -  Native Windows support with the script compiled into a single portable exe.
 
@@ -68,6 +64,7 @@ Usage
       --disabled           Exclude disabled devices
       --mfe                Exclude top level McAfee devices (EPO, NSM...)
       --siem               Exclude SIEM devices (ESM, ERC...)
+      --dsid               Display the Datasource ID field
       -f, --format         Results format: csv, text, word (default: csv)
       -w, --write <file>   Output to file (default: ds_results.txt)
       -v, --version        Print version
@@ -160,9 +157,6 @@ Installation
 Both Windows and Linux are supported. Binaries are provided for both operating systems. You can simply download and unzip the file, input your credentials and run the binary.
 
 If you want to run the script directly the system must have Python 3 and the required modules installed. 
-
-Directions on how to install and create an environment to run the script on both Linux and Windows are available at:
-https://community.mcafee.com/people/andy777/blog/2016/11/29/installing-python-3
 
 The script requires a .mfe\_saw.ini file for the credentials. 
 
