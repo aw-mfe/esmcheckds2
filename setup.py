@@ -7,7 +7,7 @@ try:
 except ImportError:
     from distutils.core import setup
 
-requirements = ['requests', 'prettytable', 'dateutil']
+requirements = ['requests', 'prettytable', 'python-dateutil']
         
 with open('README.rst') as readme_file:
     readme = readme_file.read()
