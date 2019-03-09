@@ -326,9 +326,13 @@ def main():
         if filename:
             write_table(filename, out_table)
         else:
-            print(out_table)
-            print('Host: {} | ESM Time UTC: {} | Time Offset: {} | Zone: {} | Device Count: {}'
-                    .format(host, now, time_filter, zone, count))
+            try:
+                print(out_table)
+                print('Host: {} | ESM Time UTC: {} | Time Offset: {} | Zone: {} | Device Count: {}'
+                       .format(host, now, time_filter, zone, count))
+            except UnicodeEncodeError:
+                print('Console does not support Unicode characters')
+
 
         
 if __name__ == "__main__":
