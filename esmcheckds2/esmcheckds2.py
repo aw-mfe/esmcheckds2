@@ -16,7 +16,6 @@ from itertools import chain
 
 requests.packages.urllib3.disable_warnings()
 
-
 class Config(object):
     """
     Find the config settings which include:
@@ -25,14 +24,19 @@ class Config(object):
      - esmuser
      - esmpass
     """
-    CONFIG = None
 
-    @classmethod
-    def find_ini(cls):
+    def __init__(self):
         """
-        Attempt to locate a mfe_saw.ini file
+        Initialize a Config instance.
         """
-        config = ConfigParser()
+        self.config = ConfigParser()
+        self.find_ini()
+        self.validate_config()
+        
+    def find_ini(self):
+        """
+        Attempt to locate a esm.ini file
+        """
         module_dir = os.path.dirname(sys.modules[__name__].__file__)
 
         if 'APPDATA' in os.environ:
@@ -44,526 +48,108 @@ class Config(object):
         else:
             conf_path = None
 
-        paths = [os.path.join(module_dir, '.mfe_saw.ini'), '.mfe_saw.ini']
+        paths = [os.path.join(module_dir, 'esm.ini'), 'esm.ini']
         if conf_path is not None:
-            paths.insert(1, os.path.join(conf_path, '.mfe_saw.ini'))
-        config.read(paths)
-        cls.CONFIG = config
+            paths.insert(1, os.path.join(conf_path, 'esm.ini'))
+        self.config.read(paths)
 
-    def __init__(self, **kwargs):
-        """
-        Initialize a Config instance.
+    def validate_config(self):
+        if not self.config:
+            raise FileNotFoundError('esm.ini file not found.')
+        self.check_esm_section()
 
-        """
-        self._kwargs = kwargs
-        self.find_ini()
-        self._find_envs()
-        self._init_config()
+    def check_esm_section(self):
+        if not self.config.has_section('esm'):
+            print('[esm] section is required in esm.ini.')
+            sys.exit(1)
+       
+        if not self.config.has_option('esm', 'esmhost'):
+            print('here', self.config['esm']['esmhost'])
+            print('esmhost required for [esm] section in esm.ini.')
+            sys.exit(1)
+
+        if not self.config.has_option('esm', 'esmuser'):
+            print('esmuser required for [esm] section in esm.ini.')
+            sys.exit(1)
+            
+        if not self.config.has_option('esm', 'esmpass'):
+            print('esmpass required for [esm] section in esm.ini.')
+            sys.exit(1)
+        
+        self.__dict__.update(self.config['esm'])
 
     def _find_envs(self):
         """
         Builds a dict with env variables set starting with 'ESM'.
         """
-        self._envs = {self._kenv: self._venv
-                      for self._kenv, self._venv in os.environ.items()
-                      if self._kenv.startswith('ESM')}
+        _envs = {kenv: venv
+                      for kenv, venv in os.environ.items()
+                      if kenv.startswith('esm')}
+        self.__dict__.update(_envs)
 
-    def _init_config(self):
-        """
-        """
-        if not self.CONFIG:
-            raise FileNotFoundError('mfe_ini file not found.')
 
-        try:
-            self.types = dict(self.CONFIG.items('types'))
-        except NoSectionError:
-            self.types = None
-
-        try:
-            self.recs = dict(self.CONFIG.items('recs'))
-        except NoSectionError:
-            self.recs = None
-
-        try:
-            self._ini = dict(self.CONFIG.items('esm'))
-            self.__dict__.update(self._ini)
-        except NoSectionError:
-            print("Section [esm] not found in mfe_saw.ini")
-
-        # any envs overwrite the ini values
-        if self._envs:
-            self._envs = {self._key.lower(): self._val
-                            for self._key, self._val in self._envs.items()}
-        self.__dict__.update(self._envs)
-
+    def __getitem__(self, item):
+        return self.__dict__[item]
 
 class ESM(object):
     """
     """
 
-    def __init__(self, hostname, username, password):
+    def __init__(self, cfg, api_ver='v2'):
         """
         """
-        self._host = hostname
-        self._user = username
-        self._passwd = password
+        try:
+            hostname = cfg['esmhost']
+            username = cfg['esmuser']
+            password = cfg['esmpass']
+        except TypeError:
+            hostname = cfg.esmhost
+            username = cfg.esmuser
+            password = cfg.esmpass
 
-        self._base_url = 'https://{}/rs/esm/'.format(self._host)
-        self._int_url = 'https://{}/ess'.format(self._host)
+        self.api_ver = api_ver
 
-        self._v9_creds = '{}:{}'.format(self._user, self._passwd)
-        self._v9_b64_creds = base64.b64encode(self._v9_creds.encode('utf-8'))
+        if self.api_ver == 'v2':
+            self._base_url = 'https://{}/rs/esm/v2/'.format(hostname)
+        else:
+            self._base_url = 'https://{}/rs/esm/'.format(hostname)
+        self._int_url = 'https://{}/ess'.format(hostname)
 
-        self._v10_b64_user = base64.b64encode(self._user.encode('utf-8')).decode()
-        self._v10_b64_passwd = base64.b64encode(self._passwd.encode('utf-8')).decode()
-        self._v10_params = {"username": self._v10_b64_user,
-                            "password": self._v10_b64_passwd,
+        _b64_user = base64.b64encode(username.encode('utf-8')).decode()
+        _b64_passwd = base64.b64encode(password.encode('utf-8')).decode()
+        self._params = {"username": _b64_user,
+                            "password": _b64_passwd,
                             "locale": "en_US",
                             "os": "Win32"}
         self._headers = {'Content-Type': 'application/json'}
+        
+        self._login()
 
-    def login(self):
+    def _login(self):
         """
         Log into the ESM
         """
-        self._headers = {'Authorization': 'Basic ' +
-                         self._v9_b64_creds.decode('utf-8'),
-                         'Content-Type': 'application/json'}
-        self._method = 'login'
-        self._data = self._v10_params
-        self._resp = self.post(self._method, data=self._data,
+        method = 'login'
+        data = self._params
+        resp = self.post(method, data=data,
                                headers=self._headers, raw=True)
         
-        if self._resp.status_code in [400, 401]:
+        if resp.status_code in [400, 401]:
             print('Invalid username or password for the ESM')
             sys.exit(1)
-        elif 402 <= self._resp.status_code <= 600:
-            print('ESM Login Error:', self._resp.text)
+        elif 402 <= resp.status_code <= 600:
+            print('ESM Login Error:', resp.text)
             sys.exit(1)
         
-        self._headers = {'Content-Type': 'application/json'}
-        self._headers['Cookie'] = self._resp.headers.get('Set-Cookie')
-        self._headers['X-Xsrf-Token'] = self._resp.headers.get('Xsrf-Token')
-        self._headers['SID'] = self._resp.headers.get('Location')
+        self._headers['Cookie'] = resp.headers.get('Set-Cookie')
+        self._headers['X-Xsrf-Token'] = resp.headers.get('Xsrf-Token')
 
     def logout(self):
         """
+        Logout of the ESM.
         """
-        self._url = self._base_url + 'logout'
-        self._resp = requests.delete(self._url, headers=self._headers, verify=False)
-                
-    def _build_devtree(self):
-        """
-        Coordinates assembly of the devtree
-        """
-        self._devtree = self._get_devtree()
-        self._devtree = self._insert_rec_info()
-        self._client_containers = self._get_client_containers()
-
-        """
-        This next bit of code gets and formats the clients for each
-        container and inserts them back into the devtree.
-
-        The tricky part is keeping the devtree in order and keeping
-        index labels consistent for all of the devices while
-        inserting new devices into the middle with their own index
-        labels. Kind of like changing a tire on a moving car...
-
-        pidx - parent idx is the original index value of the parent
-                this does not increment
-
-        cidx - client idx is incremented starting after the pidx
-
-        didx - stores the delta between different containers to
-               keep it all in sync.
-        """
-        self._cidx = 0
-        self._didx = 0
-        for self._container in self._client_containers:
-            self._raw_clients = self._get_raw_clients(self._container['ds_id'])
-            self._clients_lod = self._clients_to_lod(self._raw_clients)
-            self._container['idx'] = self._container['idx'] + self._didx
-            self._pidx = self._container['idx']
-            self._cidx = self._pidx + 1
-            for self._client in self._clients_lod:
-                self._client['parent_id'] = self._container['ds_id']
-                self._client['idx'] = self._cidx
-                self._cidx += 1
-                self._didx += 1
-            self._devtree[self._pidx:self._pidx] = self._clients_lod
-        self._zonetree = self._get_zonetree()
-        self._devtree = self._insert_zone_names()
-        self._zone_map = self._get_zone_map()
-        self._devtree = self._insert_zone_ids()            
-        self._devtree = self._insert_rec_info()
-        self._last_times = self._get_last_times()
-        self._last_times = self._format_times(self._last_times)
-        self._devtree = self._insert_ds_last_times(self._last_times)
-                       
-        return self._devtree
-
-        
-        
-    def _get_devtree(self):
-        """
-        Returns:
-            ESM device tree; raw, but ordered, string.
-            Does not include client datasources.
-        """
-        self._method = 'GRP%5FGETVIRTUALGROUPIPSLISTDATA'
-        self._data = {'ITEMS': '#{DC1 + DC2}',
-                      'DID': '1',
-                      'HD': 'F',
-                      'NS': '0'}
-
-        if self._headers.get('SID') is not None:
-            self._data['SID'] = self._headers['SID']
-        self._resp = self.post(self._method, data=self._data, headers=self._headers,
-                               callback=self._devtree_to_lod)
-        return self._resp
-
-    def _devtree_to_lod(self, devtree):
-        """
-        Parse key fields from raw device strings into datasource dicts
-
-        Returns:
-            List of datasource dicts
-        """
-        self._devtree = devtree
-        self._devtree = self._devtree['ITEMS']
-        self._devtree_io = StringIO(self._devtree)
-        self._devtree_csv = csv.reader(self._devtree_io, delimiter=',')
-        self._devtree_lod = []
-        self._ignore_remote_ds = False
-
-        for self._idx, self._row in enumerate(self._devtree_csv, start=1):
-            if len(self._row) == 0:
-                continue
-
-            # Get rid of duplicate 'asset' devices
-            if self._row[0] == '16':  
-                continue
-
-            # Filter out distributed ESMs                
-            if self._row[0] == '9':  
-                self._ignore_remote_ds = True
-                continue
-            
-            # Filter out distributed ESM data sources
-            if self._ignore_remote_ds:  
-                if self._row[0] != '14':
-                    continue
-                else:
-                    self._ignore_remote_ds = False
-
-            
-            if self._row[2] == "3":  # Client group datasource group containers
-                self._row.pop(0)     # are fake datasources that seemingly have
-                self._row.pop(0)     # two uneeded fields at the beginning.
-            if self._row[16] == 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT':
-                self._row[16] = '0'  # Get rid of weird type-id for N/A devices
-            
-            if len(self._row) < 29:
-                #print('Unknown datasource: {}.'.format(self._row))
-                continue
-            
-            self._ds_fields = {'idx': self._idx,
-                               'desc_id': self._row[0],
-                               'name': self._row[1],
-                               'ds_id': self._row[2],
-                               'enabled': self._row[15],
-                               'ds_ip': self._row[27],
-                               'hostname': self._row[28],
-                               'type_id': self._row[16],
-                               'vendor': '',
-                               'model': '',
-                               'tz_id': '',
-                               'date_order': '',
-                               'port': '',
-                               'syslog_tls': '',
-                               'client_groups': self._row[29],
-                               'zone_name': '',
-                               'zone_id': '',
-                               'client': False
-                               }
-            self._devtree_lod.append(self._ds_fields)
-
-        return self._devtree_lod
-
-    def _get_client_containers(self):
-        """
-        Filters DevTree for datasources that have client datasources.
-
-        Returns:
-            List of datasource dicts that have clients
-        """
-        return [self._ds for self._ds in self._devtree
-                if self._ds['desc_id'] == "3"
-                if int(self._ds['client_groups']) > 0]
-
-    def _get_raw_clients(self, ds_id):
-        """
-        Get list of raw client strings.
-
-        Args:
-            ds_id (str): Parent ds_id(s) are collected on init
-            ftoken (str): Set and used after requesting clients for ds_id
-
-        Returns:
-            List of strings representing unparsed client datasources
-        """
-        logging.debug('Getting clients for: {}'.format(ds_id))
-        self._ds_id = ds_id
-        self._method = 'DS_GETDSCLIENTLIST'
-        self._data = {'DSID': self._ds_id,
-                      'SEARCH': ''}
-        if self._headers.get('SID') is not None:
-            self._data['SID'] = self._headers['SID']
-
-        self._resp = self.post(self._method, data=self._data, headers=self._headers)
-        self._ftoken = self._resp['FTOKEN']
-        return self._get_rfile(self._ftoken)
-
-    def _get_rfile(self, ftoken):
-        """
-        Exchanges token for file
-
-        Args:
-            ftoken (str): instance name set by
-
-        """
-        self._ftoken = ftoken
-        self._method = 'MISC_READFILE'
-        self._data = {'FNAME': self._ftoken,
-                      'SPOS': '0',
-                      'NBYTES': '0'}
-
-        if self._headers.get('SID') is not None:
-            self._data['SID'] = self._headers['SID']
-
-        self._resp = self.post(self._method, data=self._data, headers=self._headers)
-        return dehexify(self._resp['DATA'])
-
-    def _clients_to_lod(self, clients):
-        """
-        Parse key fields from _get_clients() output.
-
-        Returns:
-            list of dicts
-        """
-        self._clients = clients
-        self._clients_io = StringIO(self._clients)
-        self._clients_csv = csv.reader(self._clients_io, delimiter=',')
-
-        self._clients_lod = []
-        for self._row in self._clients_csv:
-            if len(self._row) < 13:
-                continue
-
-            self._ds_fields = {'desc_id': "256",
-                               'name': self._row[1],
-                               'ds_id': self._row[0],
-                               'enabled': self._row[2],
-                               'ds_ip': self._row[3],
-                               'hostname': self._row[4],
-                               'type_id': self._row[5],
-                               'vendor': self._row[6],
-                               'model': self._row[7],
-                               'tz_id': self._row[8],
-                               'date_order': self._row[9],
-                               'port': self._row[11],
-                               'syslog_tls': self._row[12],
-                               'client_groups': "0",
-                               'zone_name': '',
-                               'zone_id': '',
-                               'client': True
-                               }
-            self._clients_lod.append(self._ds_fields)
-        return self._clients_lod        
-        
-    def _get_zonetree(self):
-        """
-        Abuses the device tree for zone data.
-        
-        Returns:
-            str: device tree string sorted by zones
-        """
-        
-        self._method = 'GRP_GETVIRTUALGROUPIPSLISTDATA'
-        self._data = {'ITEMS': '#{DC1 + DC2}',
-                        'DID': '3',
-                        'HD': 'F',
-                        'NS': '0'}
-                        
-        if self._headers.get('SID') is not None:
-            self._data['SID'] = self._headers['SID']
-
-        self._resp = self.post(self._method, data=self._data, headers=self._headers)
-        return dehexify(self._resp['ITEMS'])
-
-            
-    def _insert_zone_names(self):
-        """
-        Args:
-            _zonetree (str): set in __init__
-        
-        Returns:
-            List of dicts (str: str) devices by zone
-        """
-        self._zone_name = None
-        self._zonetree_io = StringIO(self._zonetree)
-        self._zonetree_csv = csv.reader(self._zonetree_io, delimiter=',')
-        self._zonetree_lod = []
-
-        for self._row in self._zonetree_csv:
-            if self._row[0] == '1':
-                self._zone_name = self._row[1]
-                if self._zone_name == 'Undefined':
-                    self._zone_name = ''
-                continue
-            for self._dev in self._devtree:
-                if self._dev['ds_id'] == self._row[2]:
-                    self._dev['zone_name'] = self._zone_name
-        return self._devtree
-
-            
-    def _get_zone_map(self):
-        """
-        Builds a table of zone names to zone ids.
-        
-        Returns:
-            dict (str: str) zone name : zone ids
-        """
-        self._zone_map = {}
-        self._method = 'zoneGetZoneTree'
-        self._resp = self.post(self._method, headers=self._headers)
-        for self._zone in self._resp:
-            self._zone_map[self._zone['name']] = self._zone['id']['value']
-            for self._szone in self._zone['subZones']:
-                self._zone_map[self._szone['name']] = self._szone['id']['value']
-        return self._zone_map
-        
-            
-    def _insert_zone_ids(self):
-        """
-        """
-        for self._dev in self._devtree:
-            if self._dev['zone_name'] in self._zone_map.keys():
-                self._dev['zone_id'] = self._zone_map.get(self._dev['zone_name'])
-            else:
-                self._dev['zone_id'] = '0'
-        return self._devtree
-
-    def _insert_rec_info(self):
-        """
-        Adds parent_ids to datasources in the tree based upon the
-        ordered list provided by the ESM. All the datasources below
-        a Receiver row have it's id set as their parent ID.
-
-        Returns:
-            List of datasource dicts
-        """
-        self._pid = '0'
-        self._esm_dev_id = ['14']
-        self._esm_mfe_dev_id = ['19', '21', '22', '24']
-        self._nitro_dev_id = ['2', '4', '10', '12', '13', '15']
-        self._datasource_dev_id = ['3', '5', '7', '17', '20', '23', '256']
-        
-                   
-        for self._ds in self._devtree:
-            if self._ds['desc_id'] in self._esm_dev_id:
-                self._esm_name = self._ds['name']
-                self._esm_id = self._ds['ds_id']
-                self._ds['parent_name'] = 'n/a'
-                self._ds['parent_id'] = '0'
-                continue
-
-            if self._ds['desc_id'] in self._esm_mfe_dev_id:
-                self._parent_name = self._ds['name']
-                self._parent_id = self._ds['ds_id']
-                self._ds['parent_name'] = 'n/a'
-                self._ds['parent_id'] = '0'
-                continue
-            
-            if self._ds['desc_id'] in self._nitro_dev_id:
-                self._ds['parent_name'] = self._esm_name
-                self._ds['parent_id'] = self._esm_id
-                self._parent_name = self._ds['name']
-                self._pid = self._ds['ds_id']
-                continue
-
-            if self._ds['desc_id'] in self._datasource_dev_id:
-                self._ds['parent_name'] = self._parent_name
-                self._ds['parent_id'] = self._pid
-            else:
-                self._ds['parent_name'] = 'n/a'
-                self._ds['parent_id'] = 'n/a'
-
-        return self._devtree
-
-    def _get_last_times(self):
-        """
-        """
-        self._method = 'QRY%5FGETDEVICELASTALERTTIME'
-        if self._headers.get('SID') is not None:
-            self._session = {'SID': self._headers['SID']}
-            self._data = self._session
-        else:
-            self._data = {}
-           
-        self._resp = self.post(self._method, 
-                               data=self._data, 
-                               headers=self._headers)
-        return self._resp
-
-    def _format_times(self, last_times):
-        """
-        Formats the output of _get_last_times
-
-        Args:
-            last_times (str): string output from _get_last_times()
-
-        Returns:
-            list of dicts - [{'name', 'model', 'last_time'}]
-        """
-        self._last_times = last_times
-        try:
-            self._last_times = self._last_times['ITEMS']
-        except KeyError:
-            print('ESM returned an error while getting event times.')
-            print('Does this account have permissions to see the ', end='')
-            print('"View Reports" button under System Properties in the ESM?')
-            print('The "Administrator Rights" box must be checked for the user.')
-            sys.exit(1)
-        self._last_times_io = StringIO(self._last_times)
-        self._last_times_csv = csv.reader(self._last_times_io, delimiter=',')
-        self._last_times = []
-        for self._row in self._last_times_csv:
-            if len(self._row) == 5:
-                self._time_d = {}
-                self._time_d['name'] = self._row[0]
-                self._time_d['model'] = self._row[2]
-                if self._row[3]:
-                    self._time_d['last_time'] = self._row[3]
-                else:
-                    self._time_d['last_time'] = 'never'
-                self._last_times.append(self._time_d)
-        return self._last_times
-
-    def _insert_ds_last_times(self, last_times):
-        """
-        Parse event times str and insert it into the _devtree
-
-        Returns:
-            List of datasource dicts - the devtree
-        """
-        self._last_times = last_times
-        for self._ds in self._devtree:
-            for self._time in self._last_times:
-                if self._ds['name'] == self._time['name']:
-                    self._ds['model'] = self._time['model']
-                    self._ds['last_time'] = self._time['last_time']
-        return self._devtree
+        method = self._base_url + 'logout'
+        self._delete(method)
 
     def time(self):
         """
@@ -573,58 +159,65 @@ class ESM(object):
         Example:
             '2017-07-06T12:21:59.0+0000'
         """
+        method = 'essmgtGetESSTime'
+        return self.post(method)
 
-        if self._headers.get('SID') is not None:
-            self._session = {'SID': self._headers['SID']}
-            self._data = self._session
-
-        self._method = 'essmgtGetESSTime'
-        self._resp = self.post(self._method, headers=self._headers)
-        return self._resp['value']
+    def _delete(self, url, headers=None, verify=False):
+        if not headers:
+            headers = self._headers
+        try:
+            return requests.delete(url, headers=headers, verify=verify)
+        except requests.exceptions.ConnectionError:
+            print("Unable to connect to ESM: {}".format(url))
+            sys.exit(1)
 
     def post(self, method, data=None, callback=None, raw=None,
              headers=None, verify=False):
-        """
-        """
-        self._method = method
-        self._data = data
-        self._callback = callback
-        self._headers = headers
-        self._raw = raw
-        self._verify = verify
 
-        if not self._method:
-            raise ValueError("Method must not be None")
-
-        self._url = self._base_url + self._method
-        if self._method == self._method.upper():
-            self._url = self._int_url
-            self._data = self._format_params(self._method, **self._data)
+        if method.isupper():
+            url = self._int_url
+            data = self._format_params(method, **data)
         else:
-            self._url = self._base_url + self._method
-            if self._data:
-                self._data = json.dumps(self._data)
+            url = self._base_url + method
+            if data:
+                data = json.dumps(data)
                 
-        self._resp = self._post(self._url, data=self._data,
-                                headers=self._headers, verify=self._verify)
+        resp = self._post(url, data=data,
+                            headers=self._headers, verify=verify)
 
-        if self._raw:
-            return self._resp
+        if raw:
+            return resp
 
-        
-        if 200 <= self._resp.status_code <= 300:
+        if 200 <= resp.status_code <= 300:
             try:
-                self._resp = self._resp.json()
-                self._resp = self._resp.get('return')
+                resp = resp.json()
+                if isinstance(resp, list):
+                    return resp
+                
+                if resp.get('value'):
+                    resp = resp.get('value')
+                elif resp.get('return'):
+                    resp = resp.get('return')
+                    return resp
+                    
             except json.decoder.JSONDecodeError:
-                self._resp = self._resp.text
-            if self._method == self._method.upper():
-                self._resp = self._format_resp(self._resp)
-            if self._callback:
-                self._resp = self._callback(self._resp)
-            return self._resp
-        if 400 <= self._resp.status_code <= 600:
-            print('ESM Error:', self._resp.text)
+                resp = resp.text
+
+            if method.isupper():
+                resp = self._format_resp(resp)
+
+            if 'value' in resp:
+                resp = resp.get('value')
+            
+            if 'return' in resp:
+                resp = resp.get('return')
+
+            if callback:
+                resp = getattr(self, callback)(resp)
+            return resp
+            
+        if 400 <= resp.status_code <= 600:
+            print('ESM Error:', resp.text)
             sys.exit(1)
            
     @staticmethod
@@ -655,7 +248,6 @@ class ESM(object):
         """
         Format API call
         """
-
         params = {key: val
                   for key, val in params.items() if val is not None}
 
@@ -686,6 +278,427 @@ class ESM(object):
                 value = urlparse.unquote(pair[-1])
             formatted[key] = value
         return formatted
+
+class DevTree(object):
+    def __init__(self, esm):
+        self.esm = esm
+        self.build_devtree()
+        self._build_summary()
+        self._build_name_hash()
+        self._build_ip_hash()
+        self._build_dsid_hash()
+            
+    def _build_summary(self):
+        self.summary = set()
+        for d in self.devtree:
+            self.summary.add(d['name'])
+            self.summary.add(d['ds_ip'])
+            self.summary.add(d['ds_id'])
+            
+    def _build_name_hash(self):
+        self.name = {dev['name']: dev for dev in self.devtree}
+
+    def _build_ip_hash(self):
+        self.ip = {dev['ds_ip']: dev for dev in self.devtree}
+
+    def _build_dsid_hash(self):
+        self.id = {dev['ds_id']: dev for dev in self.devtree}
+            
+    def __contains__(self, name):
+        for dev in self.devtree:
+            if name in self.summary:
+                return True
+            
+    def __iter__(self):
+        return iter(self.devtree)
+
+    def __len__(self):
+        return len(self.summary)
+
+    def __getitem__(self, item):
+        if item in self.names:
+            return self.names[item]
+        if item in self.ips:
+            return self.ips[item]
+        if item in self.dsids:
+            return self.dsids[item]
+    
+    def data_sources(self):
+        return [d for d in self.devtree if d['desc_id'] == '3' 
+                                                or d['desc_id'] == '256']
+
+    def siem_devices(self):
+        nitro_dev_id = ['2', '4', '10', '12', '13', '15']
+        return [d for d in self.devtree if d['desc_id'] in nitro_dev_id]
+
+    def build_devtree(self):
+        devtree = self._get_devtree()
+        devtree = self._format_devtree(devtree)
+        containers = self._get_client_containers(devtree)
+        devtree = self._merge_clients(containers, devtree)
+
+        zonetree = self._get_zonetree()
+        devtree = self._insert_zone_names(zonetree, devtree)
+        zone_map = self._get_zone_map()
+        devtree = self._insert_zone_ids(zone_map, devtree)            
+        devtree = self._insert_rec_info(devtree)
+        last_times = self._get_last_times()
+        last_times = self._format_times(last_times)
+        self.devtree = self._insert_ds_last_times(last_times, devtree)
+        return self.devtree
+
+    def _get_devtree(self):
+        """
+        Returns:
+            ESM device tree; raw, but ordered, string.
+            Does not include client datasources.
+        """
+        method = 'GRP%5FGETVIRTUALGROUPIPSLISTDATA'
+        data = {'ITEMS': '#{DC1 + DC2}',
+                      'DID': '1',
+                      'HD': 'F',
+                      'NS': '0'}
+        return self.esm.post(method, data=data)
+
+
+    def _format_devtree(self, devtree):
+        """
+        Parse key fields from raw device strings into datasource dicts
+
+        Returns:
+            List of datasource dicts
+        """
+        devtree = StringIO(devtree['ITEMS'])
+        devtree = csv.reader(devtree, delimiter=',')
+        devtree_lod = []
+        _ignore_remote_ds = False
+
+        for idx, row in enumerate(devtree, start=1):
+            if len(row) == 0:
+                continue
+
+            # Get rid of duplicate 'asset' devices
+            if row[0] == '16':  
+                continue
+
+            # Filter out distributed ESMs                
+            if row[0] == '9':  
+                _ignore_remote_ds = True
+                continue
+            
+            # Filter out distributed ESM data sources
+            if _ignore_remote_ds:  
+                if row[0] != '14':
+                    continue
+                else:
+                    _ignore_remote_ds = False
+            
+            if row[2] == "3":  # Client group datasource group containers
+                row.pop(0)     # are fake datasources that seemingly have
+                row.pop(0)     # two uneeded fields at the beginning.
+            if row[16] == 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT':
+                row[16] = '0'  # Get rid of weird type-id for N/A devices
+            
+            if len(row) < 29:
+                #print('Unknown datasource: {}.'.format(self._row))
+                continue
+            
+            ds_fields = {'idx': idx,
+                            'desc_id': row[0],
+                            'name': row[1],
+                            'ds_id': row[2],
+                            'enabled': row[15],
+                            'ds_ip': row[27],
+                            'hostname': row[28],
+                            'type_id': row[16],
+                            'vendor': '',
+                            'model': '',
+                            'tz_id': '',
+                            'date_order': '',
+                            'port': '',
+                            'syslog_tls': '',
+                            'client_groups': row[29],
+                            'zone_name': '',
+                            'zone_id': '',
+                            'client': False
+                            }
+            devtree_lod.append(ds_fields)
+        return devtree_lod
+
+    def _get_client_containers(self, devtree):
+        """
+        Filters DevTree for datasources that have client datasources.
+
+        Returns:
+            List of datasource dicts that have clients
+        """
+        return [ds for ds in devtree
+                if ds['desc_id'] == "3"
+                if int(ds['client_groups']) > 0]
+
+
+    def _merge_clients(self, containers, devtree):
+        _cidx = 0
+        _didx = 0
+        for cont in containers:
+            clients = self._get_clients(cont['ds_id'])
+            clients = self._format_clients(clients)
+            cont['idx'] = cont['idx'] + _didx
+            _pidx = cont['idx']
+            _cidx = _pidx + 1
+            for client in clients:
+                client['parent_id'] = cont['ds_id']
+                client['idx'] = _cidx
+                _cidx += 1
+                _didx += 1
+            devtree[_pidx:_pidx] = clients
+        return devtree
+
+
+    def _get_clients(self, ds_id):
+        """
+        Get list of raw client strings.
+
+        Args:
+            ds_id (str): Parent ds_id(s) are collected on init
+            ftoken (str): Set and used after requesting clients for ds_id
+
+        Returns:
+            List of strings representing unparsed client datasources
+        """
+        method = 'DS_GETDSCLIENTLIST'
+        data = {'DSID': ds_id,
+                 'SEARCH': ''}
+
+        resp = self.esm.post(method, data=data)
+        return self._get_rfile(resp['FTOKEN'])
+
+
+    def _get_rfile(self, ftoken):
+        """
+        Exchanges token for file
+
+        Args:
+            ftoken (str): instance name set by
+
+        """
+        method = 'MISC_READFILE'
+        data = {'FNAME': ftoken,
+                'SPOS': '0',
+                'NBYTES': '0'}
+
+        resp = self.esm.post(method, data=data)
+        return dehexify(resp['DATA'])
+
+
+    def _format_clients(self, clients):
+        """
+        Parse key fields from _get_clients() output.
+
+        Returns:
+            list of dicts
+        """
+        clients = StringIO(clients)
+        clients = csv.reader(clients, delimiter=',')
+
+        clients_lod = []
+        for row in clients:
+            if len(row) < 13:
+                continue
+
+            ds_fields = {'desc_id': "256",
+                          'name': row[1],
+                          'ds_id': row[0],
+                          'enabled': row[2],
+                          'ds_ip': row[3],
+                          'hostname': row[4],
+                          'type_id': row[5],
+                          'vendor': row[6],
+                          'model': row[7],
+                          'tz_id': row[8],
+                          'date_order': row[9],
+                          'port': row[11],
+                          'syslog_tls': row[12],
+                          'client_groups': "0",
+                          'zone_name': '',
+                          'zone_id': '',
+                          'client': True
+                               }
+            clients_lod.append(ds_fields)
+        return clients_lod        
+
+    def _get_zonetree(self):
+        """
+        Retrieves zone data.
+        
+        Returns:
+            str: device tree string sorted by zones
+        """
+        
+        method = 'GRP_GETVIRTUALGROUPIPSLISTDATA'
+        data = {'ITEMS': '#{DC1 + DC2}',
+                  'DID': '3',
+                  'HD': 'F',
+                  'NS': '0'}
+        
+        resp = self.esm.post(method, data=data)
+        return dehexify(resp['ITEMS'])
+
+    def _insert_zone_names(self, zonetree, devtree):
+        """
+        Args:
+            zonetree (str): Built by self._get_zonetree
+        
+        Returns:
+            List of dicts (str: str) devices by zone
+        """
+        zone_name = None
+        zonetree = StringIO(zonetree)
+        zonetree = csv.reader(zonetree, delimiter=',')
+
+        for row in zonetree:
+            if row[0] == '1':
+                zone_name = row[1]
+                if zone_name == 'Undefined':
+                    zone_name = ''
+                continue
+            for device in devtree:
+                if device['ds_id'] == row[2]:
+                    device['zone_name'] = zone_name
+        return devtree
+
+    def _get_zone_map(self):
+        """
+        Builds a table of zone names to zone ids.
+        
+        Returns:
+            dict (str: str) zone name : zone ids
+        """
+        zone_map = {}
+        method = 'zoneGetZoneTree'
+        resp = self.esm.post(method)
+        if not resp:
+            return zone_map
+        for zone in resp:
+            zone_map[zone['name']] = zone['id']['value']
+            for szone in zone['subZones']:
+                zone_map[szone['name']] = szone['id']['value']
+        return zone_map
+        
+            
+    def _insert_zone_ids(self, zone_map, devtree):
+        """
+        """
+        for device in devtree:
+            if device['zone_name'] in zone_map.keys():
+                device['zone_id'] = zone_map.get(device['zone_name'])
+            else:
+                device['zone_id'] = '0'
+        return devtree
+
+    def _insert_rec_info(self, devtree):
+        """
+        Adds parent_ids to datasources in the tree based upon the
+        ordered list provided by the ESM. All the datasources below
+        a Receiver row have it's id set as their parent ID.
+
+        Returns:
+            List of datasource dicts
+        """
+        _pid = '0'
+        esm_dev_id = ['14']
+        esm_mfe_dev_id = ['19', '21', '22', '24']
+        nitro_dev_id = ['2', '4', '10', '12', '13', '15']
+        datasource_dev_id = ['3', '5', '7', '17', '20', '23', '256']
+        
+                   
+        for device in devtree:
+            if device['desc_id'] in esm_dev_id:
+                esm_name = device['name']
+                esm_id = device['ds_id']
+                device['parent_name'] = 'n/a'
+                device['parent_id'] = '0'
+                continue
+
+            if device['desc_id'] in esm_mfe_dev_id:
+                parent_name = ds['name']
+                parent_id = device['ds_id']
+                device['parent_name'] = 'n/a'
+                device['parent_id'] = '0'
+                continue
+            
+            if device['desc_id'] in nitro_dev_id:
+                device['parent_name'] = esm_name
+                device['parent_id'] = esm_id
+                parent_name = device['name']
+                pid = device['ds_id']
+                continue
+
+            if device['desc_id'] in datasource_dev_id:
+                device['parent_name'] = parent_name
+                device['parent_id'] = pid
+            else:
+                device['parent_name'] = 'n/a'
+                device['parent_id'] = 'n/a'
+
+        return devtree
+
+    def _get_last_times(self):
+        """
+        """
+        method = 'QRY%5FGETDEVICELASTALERTTIME'
+        data = {}
+        return self.esm.post(method, data=data)
+
+
+    def _format_times(self, last_times):
+        """
+        Formats the output of _get_last_times
+
+        Args:
+            last_times (str): string output from _get_last_times()
+
+        Returns:
+            list of dicts - [{'name', 'model', 'last_time'}]
+        """
+        try:
+            last_times = last_times['ITEMS']
+        except KeyError:
+            print('ESM returned an error while getting event times.')
+            print('Does this account have permissions to see the ', end='')
+            print('"View Reports" button under System Properties in the ESM?')
+            print('The "Administrator Rights" box must be checked for the user.')
+            sys.exit(1)
+            
+        last_times = StringIO(last_times)
+        last_times = csv.reader(last_times, delimiter=',')
+        last_times_lod = []
+        for row in last_times:
+            if len(row) == 5:
+                time_d = {}
+                time_d['name'] = row[0]
+                time_d['model'] = row[2]
+                if row[3]:
+                    time_d['last_time'] = row[3]
+                else:
+                    time_d['last_time'] = 'never'
+                last_times_lod.append(time_d)
+        return last_times_lod
+
+    def _insert_ds_last_times(self, last_times, devtree):
+        """
+        Parse event times str and insert it into the _devtree
+
+        Returns:
+            List of datasource dicts - the devtree
+        """
+        for device in devtree:
+            for d_time in last_times:
+                if device['name'] == d_time['name']:
+                    device['model'] = d_time['model']
+                    device['last_time'] = d_time['last_time']
+        return devtree
+
 
 
 def dehexify(data):

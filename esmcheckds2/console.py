@@ -10,7 +10,7 @@ import dateutil.parser as dateparser
 from configparser import ConfigParser, NoSectionError, MissingSectionHeaderError
 from datetime import datetime, timedelta
 from io import StringIO
-from esmcheckds2.esmcheckds2 import Config, ESM, dehexify
+from esmcheckds2.esmcheckds2 import Config, ESM, dehexify, DevTree
 from esmcheckds2.version import __version__
 from prettytable import PrettyTable, PLAIN_COLUMNS, MSWORD_FRIENDLY
 
@@ -103,21 +103,21 @@ def print_csv(lol, headers=None):
             
 def main():
     config = Config()
-    try:
-        host = config.esmhost
-    except AttributeError:
-        print("Cannot find 'esmhost' key in .mfe_saw.ini")
-        sys.exit(0)
-    try:        
-        user = config.esmuser
-    except AttributeError:
-        print("Cannot find 'esmuser' key in .mfe_saw.ini")
-        sys.exit(0)
-    try:        
-        passwd = config.esmpass
-    except AttributeError:
-        print("Cannot find 'esmpass' key in .mfe_saw.ini")
-        sys.exit(0)
+    # try:
+    #     host = config.esmhost
+    # except AttributeError:
+    #     print("Cannot find 'esmhost' key in .mfe_saw.ini")
+    #     sys.exit(0)
+    # try:        
+    #     user = config.esmuser
+    # except AttributeError:
+    #     print("Cannot find 'esmuser' key in .mfe_saw.ini")
+    #     sys.exit(0)
+    # try:        
+    #     passwd = config.esmpass
+    # except AttributeError:
+    #     print("Cannot find 'esmpass' key in .mfe_saw.ini")
+    #     sys.exit(0)
     helpdoc = '''\
     usage: esmcheckds2 <-d|-h|-m|-a|--future> <timeframe> [OPTIONS]
 
@@ -196,11 +196,12 @@ def main():
     future_only = pargs.future
     show_all = pargs.show_all
     
-    esm = ESM(host, user, passwd)
-    esm.login()
+    esm = ESM(config)
     now_str = esm.time()[:-7]
-    _devtree = esm._build_devtree()
+    _devtree = DevTree(esm)
     esm.logout()
+
+    host = config.esmhost
 
     now = datetime.strptime(now_str, '%Y-%m-%dT%H:%M:%S')
     if show_all:
@@ -328,7 +329,7 @@ def main():
         else:
             try:
                 print(out_table)
-                print('Host: {} | ESM Time UTC: {} | Time Offset: {} | Zone: {} | Device Count: {}'
+                print('ESM: {} | ESM Time UTC: {} | Time Offset: {} | Zone: {} | Device Count: {}'
                        .format(host, now, time_filter, zone, count))
             except UnicodeEncodeError:
                 print('Console does not support Unicode characters')

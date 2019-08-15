@@ -30,6 +30,8 @@ lib
 lib64
 venv*/
 pyvenv*/
+env/
+.vscode
 
 # Installer logs
 pip-log.txt
