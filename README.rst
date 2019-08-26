@@ -147,7 +147,7 @@ Prerequisites
 - Python modules in the requirements file
 -  McAfee ESM running version 9.x or 10.2.0+
 -  IP connectivity 443 access to the ESM
--  ESM Credentials and proper permissions 
+-  ESM Credentials and Admin privileges
 - .mfe_ini file (covered below)
 
 ------------
