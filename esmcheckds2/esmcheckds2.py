@@ -35,7 +35,7 @@ class Config(object):
         
     def find_ini(self):
         """
-        Attempt to locate a esm.ini file
+        Attempt to locate a .mfe_saw.ini file
         """
         module_dir = os.path.dirname(sys.modules[__name__].__file__)
 
@@ -48,32 +48,31 @@ class Config(object):
         else:
             conf_path = None
 
-        paths = [os.path.join(module_dir, 'esm.ini'), 'esm.ini']
+        paths = [os.path.join(module_dir, '.mfe_saw.ini'), '.mfe_saw.ini']
         if conf_path is not None:
-            paths.insert(1, os.path.join(conf_path, 'esm.ini'))
+            paths.insert(1, os.path.join(conf_path, '.mfe_saw.ini'))
         self.config.read(paths)
 
     def validate_config(self):
         if not self.config:
-            raise FileNotFoundError('esm.ini file not found.')
+            raise FileNotFoundError('.mfe_saw.ini file not found.')
         self.check_esm_section()
 
     def check_esm_section(self):
         if not self.config.has_section('esm'):
-            print('[esm] section is required in esm.ini.')
+            print('[esm] section is required in .mfe_saw.ini.')
             sys.exit(1)
        
         if not self.config.has_option('esm', 'esmhost'):
-            print('here', self.config['esm']['esmhost'])
-            print('esmhost required for [esm] section in esm.ini.')
+            print('esmhost required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
 
         if not self.config.has_option('esm', 'esmuser'):
-            print('esmuser required for [esm] section in esm.ini.')
+            print('esmuser required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
             
         if not self.config.has_option('esm', 'esmpass'):
-            print('esmpass required for [esm] section in esm.ini.')
+            print('esmpass required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
         
         self.__dict__.update(self.config['esm'])
@@ -580,9 +579,9 @@ class DevTree(object):
         if not resp:
             return zone_map
         for zone in resp:
-            zone_map[zone['name']] = zone['id']['value']
+            zone_map[zone['name']] = zone['id']
             for szone in zone['subZones']:
-                zone_map[szone['name']] = szone['id']['value']
+                zone_map[szone['name']] = szone['id']
         return zone_map
         
             

@@ -264,8 +264,8 @@ def main():
             ds['last_time'] = 'n/a'
         
         fields = [ds['name'], ds['ds_ip'], ds['model'], 
-                  ds['parent_name'], ds['last_time']]
-        headers = ['Name', 'IP', 'Type', 'Parent Device', 'Last Time']
+                  ds['parent_name'], ds['zone_name'], ds['last_time']]
+        headers = ['Name', 'IP', 'Type', 'Parent Device', 'Zone', 'Last Time']
         
         if dsid:
             fields.insert(1, ds['ds_id'])
