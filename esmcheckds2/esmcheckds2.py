@@ -620,7 +620,7 @@ class DevTree(object):
                 continue
 
             if device['desc_id'] in esm_mfe_dev_id:
-                parent_name = ds['name']
+                parent_name = device['name']
                 parent_id = device['ds_id']
                 device['parent_name'] = 'n/a'
                 device['parent_id'] = '0'
