@@ -453,7 +453,6 @@ class DevTree(object):
             devtree[_pidx:_pidx] = clients
         return devtree
 
-
     def _get_clients(self, ds_id):
         """
         Get list of raw client strings.
@@ -469,8 +468,43 @@ class DevTree(object):
         data = {'DSID': ds_id,
                  'SEARCH': ''}
 
+        file = self.esm.post(method, data=data)['FTOKEN']
+        pos = 0
+        nbytes = 0
+        method = 'MISC_READFILE'
+        data = {'FNAME': file,
+                'SPOS': '0',
+                'NBYTES': '0'}
         resp = self.esm.post(method, data=data)
-        return self._get_rfile(resp['FTOKEN'])
+
+        if resp['FSIZE'] == resp['BREAD']:
+            client_data = resp['DATA']
+            method = 'ESSMGT_DELETEFILE'
+            data = {'FN': file}
+            self.esm.post(method, data=data)
+            return dehexify(client_data)
+
+        client_data = []
+        client_data.append(resp['DATA'])
+        file_size = int(resp['FSIZE'])
+        collected = int(resp['BREAD'])
+
+        while file_size > collected:
+            pos += int(resp['BREAD'])
+            nbytes = file_size - collected
+            method = 'MISC_READFILE'
+            data = {'FNAME': file,
+                    'SPOS': str(pos),
+                    'NBYTES': str(nbytes)}
+            resp = self.esm.post(method, data=data)
+            collected += int(resp['BREAD'])
+            client_data.append(resp['DATA'])
+
+        method = 'ESSMGT_DELETEFILE'
+        data = {'FN': file}
+        self.esm.post(method, data=data)
+
+        return dehexify(''.join(client_data))
 
 
     def _get_rfile(self, ftoken):
