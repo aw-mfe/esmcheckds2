@@ -3,18 +3,17 @@
 import base64
 import csv
 import json
-import logging
 import os
 import re
 import requests
 import sys
 import urllib.parse as urlparse
 from io import StringIO
-from collections import Counter
-from configparser import ConfigParser, NoSectionError
-from itertools import chain
+from configparser import ConfigParser
+
 
 requests.packages.urllib3.disable_warnings()
+
 
 class Config(object):
     """
@@ -32,7 +31,7 @@ class Config(object):
         self.config = ConfigParser()
         self.find_ini()
         self.validate_config()
-        
+
     def find_ini(self):
         """
         Attempt to locate a .mfe_saw.ini file
@@ -62,7 +61,7 @@ class Config(object):
         if not self.config.has_section('esm'):
             print('[esm] section is required in .mfe_saw.ini.')
             sys.exit(1)
-       
+
         if not self.config.has_option('esm', 'esmhost'):
             print('esmhost required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
@@ -70,11 +69,11 @@ class Config(object):
         if not self.config.has_option('esm', 'esmuser'):
             print('esmuser required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
-            
+
         if not self.config.has_option('esm', 'esmpass'):
             print('esmpass required for [esm] section in .mfe_saw.ini.')
             sys.exit(1)
-        
+
         self.__dict__.update(self.config['esm'])
 
     def _find_envs(self):
@@ -82,13 +81,13 @@ class Config(object):
         Builds a dict with env variables set starting with 'ESM'.
         """
         _envs = {kenv: venv
-                      for kenv, venv in os.environ.items()
-                      if kenv.startswith('esm')}
+                 for kenv, venv in os.environ.items()
+                 if kenv.startswith('esm')}
         self.__dict__.update(_envs)
-
 
     def __getitem__(self, item):
         return self.__dict__[item]
+
 
 class ESM(object):
     """
@@ -117,11 +116,11 @@ class ESM(object):
         _b64_user = base64.b64encode(username.encode('utf-8')).decode()
         _b64_passwd = base64.b64encode(password.encode('utf-8')).decode()
         self._params = {"username": _b64_user,
-                            "password": _b64_passwd,
-                            "locale": "en_US",
-                            "os": "Win32"}
+                        "password": _b64_passwd,
+                        "locale": "en_US",
+                        "os": "Win32"}
         self._headers = {'Content-Type': 'application/json'}
-        
+
         self._login()
 
     def _login(self):
@@ -131,15 +130,15 @@ class ESM(object):
         method = 'login'
         data = self._params
         resp = self.post(method, data=data,
-                               headers=self._headers, raw=True)
-        
+                         headers=self._headers, raw=True)
+
         if resp.status_code in [400, 401]:
             print('Invalid username or password for the ESM')
             sys.exit(1)
         elif 402 <= resp.status_code <= 600:
             print('ESM Login Error:', resp.text)
             sys.exit(1)
-        
+
         self._headers['Cookie'] = resp.headers.get('Set-Cookie')
         self._headers['X-Xsrf-Token'] = resp.headers.get('Xsrf-Token')
 
@@ -180,9 +179,9 @@ class ESM(object):
             url = self._base_url + method
             if data:
                 data = json.dumps(data)
-                
+
         resp = self._post(url, data=data,
-                            headers=self._headers, verify=verify)
+                          headers=self._headers, verify=verify)
 
         if raw:
             return resp
@@ -192,13 +191,13 @@ class ESM(object):
                 resp = resp.json()
                 if isinstance(resp, list):
                     return resp
-                
+
                 if resp.get('value'):
                     resp = resp.get('value')
                 elif resp.get('return'):
                     resp = resp.get('return')
                     return resp
-                    
+
             except json.decoder.JSONDecodeError:
                 resp = resp.text
 
@@ -207,18 +206,18 @@ class ESM(object):
 
             if 'value' in resp:
                 resp = resp.get('value')
-            
+
             if 'return' in resp:
                 resp = resp.get('return')
 
             if callback:
                 resp = getattr(self, callback)(resp)
             return resp
-            
+
         if 400 <= resp.status_code <= 600:
             print('ESM Error:', resp.text)
             sys.exit(1)
-           
+
     @staticmethod
     def _post(url, data=None, headers=None, verify=False):
         """
@@ -278,6 +277,7 @@ class ESM(object):
             formatted[key] = value
         return formatted
 
+
 class DevTree(object):
     def __init__(self, esm):
         self.esm = esm
@@ -286,14 +286,14 @@ class DevTree(object):
         self._build_name_hash()
         self._build_ip_hash()
         self._build_dsid_hash()
-            
+
     def _build_summary(self):
         self.summary = set()
         for d in self.devtree:
             self.summary.add(d['name'])
             self.summary.add(d['ds_ip'])
             self.summary.add(d['ds_id'])
-            
+
     def _build_name_hash(self):
         self.name = {dev['name']: dev for dev in self.devtree}
 
@@ -302,29 +302,20 @@ class DevTree(object):
 
     def _build_dsid_hash(self):
         self.id = {dev['ds_id']: dev for dev in self.devtree}
-            
+
     def __contains__(self, name):
-        for dev in self.devtree:
-            if name in self.summary:
-                return True
-            
+        if name in self.summary:
+            return True
+
     def __iter__(self):
         return iter(self.devtree)
 
     def __len__(self):
         return len(self.summary)
 
-    def __getitem__(self, item):
-        if item in self.names:
-            return self.names[item]
-        if item in self.ips:
-            return self.ips[item]
-        if item in self.dsids:
-            return self.dsids[item]
-    
     def data_sources(self):
-        return [d for d in self.devtree if d['desc_id'] == '3' 
-                                                or d['desc_id'] == '256']
+        return [d for d in self.devtree if d['desc_id'] == '3'
+                or d['desc_id'] == '256']
 
     def siem_devices(self):
         nitro_dev_id = ['2', '4', '10', '12', '13', '15']
@@ -339,7 +330,7 @@ class DevTree(object):
         zonetree = self._get_zonetree()
         devtree = self._insert_zone_names(zonetree, devtree)
         zone_map = self._get_zone_map()
-        devtree = self._insert_zone_ids(zone_map, devtree)            
+        devtree = self._insert_zone_ids(zone_map, devtree)
         devtree = self._insert_rec_info(devtree)
         last_times = self._get_last_times()
         last_times = self._format_times(last_times)
@@ -354,9 +345,9 @@ class DevTree(object):
         """
         method = 'GRP%5FGETVIRTUALGROUPIPSLISTDATA'
         data = {'ITEMS': '#{DC1 + DC2}',
-                      'DID': '1',
-                      'HD': 'F',
-                      'NS': '0'}
+                'DID': '1',
+                'HD': 'F',
+                'NS': '0'}
         return self.esm.post(method, data=data)
 
 
@@ -377,31 +368,31 @@ class DevTree(object):
                 continue
 
             # Get rid of duplicate 'asset' devices
-            if row[0] == '16':  
+            if row[0] == '16':
                 continue
 
-            # Filter out distributed ESMs                
-            if row[0] == '9':  
+            # Filter out distributed ESMs
+            if row[0] == '9':
                 _ignore_remote_ds = True
                 continue
-            
+
             # Filter out distributed ESM data sources
-            if _ignore_remote_ds:  
+            if _ignore_remote_ds:
                 if row[0] != '14':
                     continue
                 else:
                     _ignore_remote_ds = False
-            
+
             if row[2] == "3":  # Client group datasource group containers
                 row.pop(0)     # are fake datasources that seemingly have
                 row.pop(0)     # two uneeded fields at the beginning.
             if row[16] == 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT':
                 row[16] = '0'  # Get rid of weird type-id for N/A devices
-            
+
             if len(row) < 29:
                 #print('Unknown datasource: {}.'.format(self._row))
                 continue
-            
+
             ds_fields = {'idx': idx,
                             'desc_id': row[0],
                             'name': row[1],
@@ -556,24 +547,24 @@ class DevTree(object):
                           'zone_name': '',
                           'zone_id': '',
                           'client': True
-                               }
+                        }
             clients_lod.append(ds_fields)
-        return clients_lod        
+        return clients_lod
 
     def _get_zonetree(self):
         """
         Retrieves zone data.
-        
+
         Returns:
             str: device tree string sorted by zones
         """
-        
+
         method = 'GRP_GETVIRTUALGROUPIPSLISTDATA'
         data = {'ITEMS': '#{DC1 + DC2}',
                   'DID': '3',
                   'HD': 'F',
                   'NS': '0'}
-        
+
         resp = self.esm.post(method, data=data)
         return dehexify(resp['ITEMS'])
 
@@ -581,7 +572,7 @@ class DevTree(object):
         """
         Args:
             zonetree (str): Built by self._get_zonetree
-        
+
         Returns:
             List of dicts (str: str) devices by zone
         """
@@ -603,7 +594,7 @@ class DevTree(object):
     def _get_zone_map(self):
         """
         Builds a table of zone names to zone ids.
-        
+
         Returns:
             dict (str: str) zone name : zone ids
         """
@@ -617,8 +608,8 @@ class DevTree(object):
             for szone in zone['subZones']:
                 zone_map[szone['name']] = szone['id']
         return zone_map
-        
-            
+
+
     def _insert_zone_ids(self, zone_map, devtree):
         """
         """
@@ -633,18 +624,17 @@ class DevTree(object):
         """
         Adds parent_ids to datasources in the tree based upon the
         ordered list provided by the ESM. All the datasources below
-        a Receiver row have it's id set as their parent ID.
+        a Receiver row have its id set as their parent ID.
 
         Returns:
             List of datasource dicts
         """
-        _pid = '0'
         esm_dev_id = ['14']
         esm_mfe_dev_id = ['19', '21', '22', '24']
         nitro_dev_id = ['2', '4', '10', '12', '13', '15']
         datasource_dev_id = ['3', '5', '7', '17', '20', '23', '256']
-        
-                   
+
+
         for device in devtree:
             if device['desc_id'] in esm_dev_id:
                 esm_name = device['name']
@@ -659,17 +649,17 @@ class DevTree(object):
                 device['parent_name'] = 'n/a'
                 device['parent_id'] = '0'
                 continue
-            
+
             if device['desc_id'] in nitro_dev_id:
                 device['parent_name'] = esm_name
                 device['parent_id'] = esm_id
                 parent_name = device['name']
-                pid = device['ds_id']
+                parent_id = device['ds_id']
                 continue
 
             if device['desc_id'] in datasource_dev_id:
                 device['parent_name'] = parent_name
-                device['parent_id'] = pid
+                device['parent_id'] = parent_id
             else:
                 device['parent_name'] = 'n/a'
                 device['parent_id'] = 'n/a'
@@ -702,7 +692,7 @@ class DevTree(object):
             print('"View Reports" button under System Properties in the ESM?')
             print('The "Administrator Rights" box must be checked for the user.')
             sys.exit(1)
-            
+
         last_times = StringIO(last_times)
         last_times = csv.reader(last_times, delimiter=',')
         last_times_lod = []
@@ -776,7 +766,7 @@ def dehexify(data):
 
     for (enc, dec) in uri.items():
         data = data.replace(enc, dec)
-    
+
     data = urlparse.unquote(data)
 
     return data
