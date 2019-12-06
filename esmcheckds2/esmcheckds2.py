@@ -634,7 +634,7 @@ class DevTree(object):
         nitro_dev_id = ['2', '4', '10', '12', '13', '15']
         datasource_dev_id = ['3', '5', '7', '17', '20', '23', '256']
 
-
+        parent_id, parent_name = None
         for device in devtree:
             if device['desc_id'] in esm_dev_id:
                 esm_name = device['name']
